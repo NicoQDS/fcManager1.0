@@ -1,0 +1,80 @@
+
+body {
+  background-color: #f8f9fa;
+}
+
+#pageTitle {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+#homeSubtitle2 {
+  font-size:  clamp(0.6rem, 1rem + 1.5vw, 1.5rem);
+  color: #6c757d;
+}
+
+.col-auto {
+  flex: 1 0 auto;
+  width: auto;
+}
+
+#creditsPlayersRow {
+  margin-bottom: 1.5rem;
+  align-items: flex-end;
+}
+
+#maxBuyable {
+  max-width: 100px;
+  font-size: 0.9rem;
+}
+
+.form-check-label {
+  padding: 0rem 0.5rem 0rem 0.5rem;
+}
+
+#newAuctionForm,
+#playersUploadSection {
+  max-width: 600px;
+}
+
+#initialCredits-group {
+  max-width: 220px;
+}
+
+#initialCredits {
+  max-width: 120px;
+}
+
+#numTeams {
+  max-width: 120px;
+}
+
+.btn-secondary {
+  background-color: black;
+  border-color: black;
+}
+
+#continueBtn {
+  background-color: #ffa012;
+  border-color: #ffa012;
+}
+
+#continueBtn:hover {
+  background-color: #e08e00;
+  border-color: #e08e00;
+}
+
+.btn:hover {
+  color: var(--bs-btn-hover-color);
+  background-color: var(--bs-btn-hover-bg);
+  border-color: var(--bs-btn-hover-border-color);
+}
+
+.is-invalid-field {
+  border-color: #f5a3a3;
+}
+
+#playersFile::file-selector-button {
+  background-color: #ffa012;
+  color: white;
+}
