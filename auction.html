@@ -9,41 +9,160 @@
       rel="stylesheet"
     />
     <link href="theme.css" rel="stylesheet" />
+    <link href="auction.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="container py-5">
-      <a href="index.html" class="btn btn-secondary mb-4">Back</a>
-      <h1>Auction (placeholder)</h1>
-      <p class="text-muted">Loaded data below — real auction screen comes later.</p>
+    <div id="auctionLayout">
+      <!-- HEADER -->
+      <header id="auctionHeader">
+        <h1 id="auctionLeague">League name</h1>
+        <div class="header-right">
+          <span id="soldCounter" class="text-muted">sold 0 / 0</span>
+          <button id="saveBtn" class="btn btn-orange btn-sm">Save</button>
+          <a href="index.html" class="btn btn-secondary btn-sm">Exit</a>
+        </div>
+      </header>
 
-      <div id="summary" class="my-4"></div>
+      <!-- MIDDLE: player list + teams sidebar -->
+      <main id="auctionMain">
+        <!-- PLAYER LIST -->
+        <section id="playerListZone">
+          <div id="playerPanel">
+            <div id="playerListControls">
+              <input
+                type="search"
+                id="playerSearch"
+                class="form-control form-control-sm"
+                placeholder="Search player…"
+              />
+              <div id="roleFilterActions">
+                <span class="text-muted">Roles:</span>
+                <button type="button" id="rolesAll" class="btn btn-link btn-sm p-0">Select all</button>
+                <button type="button" id="rolesNone" class="btn btn-link btn-sm p-0">Deselect all</button>
+                <div id="statusFilters" class="form-check">
+                  <input type="checkbox" class="form-check-input" id="hideSold" />
+                  <label class="form-check-label" for="hideSold">Hide sold</label>
+                </div>
+              </div>
+              <div id="roleFilter" role="group" aria-label="Filter by role">
+                <input type="checkbox" class="btn-check" id="role-Por" value="Por" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-Por">Por</label>
+                <input type="checkbox" class="btn-check" id="role-Dd" value="Dd" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-Dd">Dd</label>
+                <input type="checkbox" class="btn-check" id="role-Dc" value="Dc" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-Dc">Dc</label>
+                <input type="checkbox" class="btn-check" id="role-Ds" value="Ds" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-Ds">Ds</label>
+                <input type="checkbox" class="btn-check" id="role-B" value="B" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-B">B</label>
+                <input type="checkbox" class="btn-check" id="role-E" value="E" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-E">E</label>
+                <input type="checkbox" class="btn-check" id="role-M" value="M" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-M">M</label>
+                <input type="checkbox" class="btn-check" id="role-C" value="C" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-C">C</label>
+                <input type="checkbox" class="btn-check" id="role-W" value="W" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-W">W</label>
+                <input type="checkbox" class="btn-check" id="role-T" value="T" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-T">T</label>
+                <input type="checkbox" class="btn-check" id="role-A" value="A" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-A">A</label>
+                <input type="checkbox" class="btn-check" id="role-Pc" value="Pc" autocomplete="off" />
+                <label class="btn btn-sm btn-outline-secondary" for="role-Pc">Pc</label>
+              </div>
+            </div>
+            <div id="playerListTableWrap">
+              <table class="table table-sm table-hover mb-0">
+              <thead>
+                <tr>
+                  <th id="sortName" class="sortable">
+                    Name <span class="sort-caret"></span>
+                  </th>
+                  <th id="sortTeam" class="sortable">
+                    Team <span class="sort-caret"></span>
+                  </th>
+                  <th>Roles</th>
+                  <th class="text-end">Qt</th>
+                  <th class="text-end">Qt.I</th>
+                  <th class="text-end">Diff</th>
+                  <th class="text-end">FVM</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="playerListBody">
+                <!-- sample rows (layout only) -->
+                <tr>
+                  <td>Lautaro Martinez</td><td>Inter</td>
+                  <td><span class="role-badge role-A">A</span></td>
+                  <td class="text-end">30</td><td class="text-end">27</td>
+                  <td class="text-end">3</td><td class="text-end">95</td><td></td>
+                </tr>
+                <tr>
+                  <td>Theo Hernandez</td><td>Milan</td>
+                  <td><span class="role-badge role-Ds">Ds</span><span class="role-badge role-E">E</span></td>
+                  <td class="text-end">18</td><td class="text-end">15</td>
+                  <td class="text-end">3</td><td class="text-end">60</td><td></td>
+                </tr>
+                <tr class="sold-row">
+                  <td>Carnesecchi</td><td>Atalanta</td>
+                  <td><span class="role-badge role-Por">Por</span></td>
+                  <td class="text-end">18</td><td class="text-end">14</td>
+                  <td class="text-end">4</td><td class="text-end">80</td>
+                  <td><span class="badge text-bg-secondary">sold</span></td>
+                </tr>
+              </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
 
-      <details>
-        <summary>Raw JSON</summary>
-        <pre id="raw" class="bg-light p-3 mt-2"></pre>
-      </details>
+        <!-- TEAMS SIDEBAR -->
+        <aside id="teamsZone">
+          <!-- sample team cards (layout only) -->
+          <div class="team-card">
+            <div class="team-card-head">
+              <span class="team-name">Nico FC</span>
+              <span class="team-credits">312 fM</span>
+            </div>
+            <div class="team-slots">P2 · D5 · C4 · A3</div>
+          </div>
+          <div class="team-card">
+            <div class="team-card-head">
+              <span class="team-name">Team Marco</span>
+              <span class="team-credits">288 fM</span>
+            </div>
+            <div class="team-slots">P1 · D4 · C5 · A2</div>
+          </div>
+          <div class="team-card">
+            <div class="team-card-head">
+              <span class="team-name">Real Podio</span>
+              <span class="team-credits">401 fM</span>
+            </div>
+            <div class="team-slots">P3 · D6 · C3 · A1</div>
+          </div>
+        </aside>
+      </main>
+
+      <!-- ACTION BAR -->
+      <footer id="actionBar">
+        <span id="selectedPlayer">Selected: —</span>
+        <div class="action-controls">
+          <select id="assignTeam" class="form-select form-select-sm">
+            <option value="">Team…</option>
+          </select>
+          <input
+            type="number"
+            id="assignPrice"
+            class="form-control form-control-sm"
+            placeholder="price"
+            min="1"
+          />
+          <button id="assignBtn" class="btn btn-orange btn-sm">Assign</button>
+          <button id="undoBtn" class="btn btn-secondary btn-sm">Undo</button>
+        </div>
+      </footer>
     </div>
 
-    <script>
-      const stored = sessionStorage.getItem('fcmAuction');
-
-      if (!stored) {
-        document.getElementById('summary').innerHTML =
-          '<div class="alert alert-warning">No auction loaded. Go back and pick a file.</div>';
-      } else {
-        const a = JSON.parse(stored);
-        document.getElementById('summary').innerHTML = `
-          <ul class="list-group">
-            <li class="list-group-item"><strong>League:</strong> ${a.leagueName}</li>
-            <li class="list-group-item"><strong>Initial credits:</strong> ${a.initialCredits ?? '—'}</li>
-            <li class="list-group-item"><strong>Max buyable:</strong> ${
-              a.maxBuyableEnabled ? a.maxBuyable : 'disabled'
-            }</li>
-            <li class="list-group-item"><strong>Teams (${a.teams.length}):</strong> ${a.teams.join(', ')}</li>
-            <li class="list-group-item"><strong>Players:</strong> ${a.players.length}</li>
-          </ul>`;
-        document.getElementById('raw').textContent = JSON.stringify(a, null, 2);
-      }
-    </script>
+    <script src="auction.js"></script>
   </body>
 </html>

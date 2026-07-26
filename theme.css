@@ -7,6 +7,17 @@
   --fcm-orange-hover: #e08e00;
 }
 
+/* Checked checkboxes/switches use brand orange (white tick stays visible). */
+.form-check-input:checked {
+  background-color: var(--fcm-orange);
+  border-color: var(--fcm-orange);
+}
+
+.form-check-input:focus {
+  border-color: var(--fcm-orange);
+  box-shadow: 0 0 0 0.25rem rgba(255, 160, 18, 0.25);
+}
+
 /* Brand action button. Overrides Bootstrap's button variables so
    default/hover/active/disabled states all stay on-brand automatically. */
 .btn-orange {

@@ -1,0 +1,259 @@
+/* Auction page — full-height layout: sticky header, scrollable middle, sticky action bar. */
+
+body {
+  background-color: #f8f9fa;
+  margin: 0;
+}
+
+#auctionLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* HEADER */
+#auctionHeader {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border-bottom: 1px solid #dee2e6;
+}
+
+#auctionLeague {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* MIDDLE */
+#auctionMain {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0; /* lets children scroll instead of overflowing */
+}
+
+/* Player list (left third) */
+#playerListZone {
+  flex: 0 0 33.333%;
+  display: flex;
+  min-width: 0;
+  padding: 0.75rem;
+}
+
+/* Bound card: controls + table are one unit, never visually unlink. */
+#playerPanel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+#playerListControls {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+#playerSearch {
+  width: 100%;
+}
+
+#roleFilterActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem; /* match "Hide sold" label */
+}
+
+#roleFilterActions .btn-link {
+  text-decoration: none;
+  color: var(--fcm-orange);
+  font-size: inherit;
+}
+
+/* Push "Hide sold" to the far right; blank space fills the middle. */
+#roleFilterActions #statusFilters {
+  margin-left: auto;
+  margin-bottom: 0;
+}
+
+/* Role toggle buttons — multi-select, wrap to fit the narrow column. */
+#roleFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+#roleFilter .btn {
+  min-width: 2.4rem;
+}
+
+/* Checked role button = that role's badge color. */
+#roleFilter .btn-check:checked + .btn {
+  color: #fff;
+}
+#role-Por:checked + .btn { background: var(--role-por); border-color: var(--role-por); }
+#role-Ds:checked  + .btn,
+#role-Dc:checked  + .btn,
+#role-Dd:checked  + .btn,
+#role-B:checked   + .btn { background: var(--role-def); border-color: var(--role-def); }
+#role-E:checked   + .btn,
+#role-M:checked   + .btn,
+#role-C:checked   + .btn { background: var(--role-mid); border-color: var(--role-mid); }
+#role-W:checked   + .btn,
+#role-T:checked   + .btn { background: var(--role-treq); border-color: var(--role-treq); }
+#role-A:checked   + .btn,
+#role-Pc:checked  + .btn { background: var(--role-att); border-color: var(--role-att); }
+
+#playerListTableWrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0 0.75rem;
+}
+
+#playerListTableWrap thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 1;
+}
+
+.sold-row {
+  opacity: 0.55;
+}
+
+/* Role badges — one color per mantra role. */
+.role-badge {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  margin-right: 0.15rem;
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+}
+
+/* Official mantra line colors (used by badges AND role filter buttons). */
+:root {
+  --role-por: #f5a623; /* portiere */
+  --role-def: #4caf50; /* linea difensiva */
+  --role-mid: #2196f3; /* linea di centrocampo */
+  --role-treq: #c724b1; /* linea di trequarti */
+  --role-att: #e53935; /* linea d'attacco */
+}
+
+.role-Por                        { background: var(--role-por); }
+.role-Ds, .role-Dc, .role-Dd, .role-B { background: var(--role-def); }
+.role-E, .role-M, .role-C        { background: var(--role-mid); }
+.role-W, .role-T                 { background: var(--role-treq); }
+.role-A, .role-Pc                { background: var(--role-att); }
+
+/* Sortable column header */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  color: var(--fcm-orange);
+}
+
+.sort-caret::after {
+  content: '\2195'; /* ↕ unsorted */
+  color: #adb5bd;
+  font-size: 0.8em;
+}
+
+th.sortable[data-dir='asc'] .sort-caret::after {
+  content: '\2191'; /* ↑ */
+  color: var(--fcm-orange);
+}
+
+th.sortable[data-dir='desc'] .sort-caret::after {
+  content: '\2193'; /* ↓ */
+  color: var(--fcm-orange);
+}
+
+/* Teams sidebar (scrolls independently) */
+#teamsZone {
+  flex: 0 0 260px;
+  overflow-y: auto;
+  padding: 0.75rem;
+  background: #fff;
+}
+
+.team-card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.team-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.team-name {
+  font-weight: 600;
+}
+
+.team-credits {
+  color: var(--fcm-orange);
+  font-weight: 600;
+}
+
+.team-slots {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+/* ACTION BAR */
+#actionBar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border-top: 1px solid #dee2e6;
+}
+
+#selectedPlayer {
+  font-weight: 600;
+}
+
+.action-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-controls .form-select,
+.action-controls .form-control {
+  width: auto;
+}
+
+#assignPrice {
+  max-width: 100px;
+}
