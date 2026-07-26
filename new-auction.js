@@ -1,5 +1,6 @@
 const enableMaxBuyable = document.getElementById('enableMaxBuyable');
 const maxBuyable = document.getElementById('maxBuyable');
+const initialCredits = document.getElementById('initialCredits');
 const numTeams = document.getElementById('numTeams');
 const teamNamesBlock = document.getElementById('teamNamesBlock');
 const continueBtn = document.getElementById('continueBtn');
@@ -7,6 +8,11 @@ const leagueName = document.getElementById('leagueName');
 const settingsFields = document.getElementById('settingsFields');
 const playersUploadSection = document.getElementById('playersUploadSection');
 const playersFile = document.getElementById('playersFile');
+const createAuctionBtn = document.getElementById('createAuctionBtn');
+const saveStatus = document.getElementById('saveStatus');
+
+// Players parsed from the last valid xlsx, ready to save.
+let parsedPlayers = null;
 
 function updateMaxBuyableEnabled() {
   maxBuyable.disabled = !enableMaxBuyable.checked;
@@ -65,7 +71,70 @@ continueBtn.addEventListener('click', () => {
   playersUploadSection.classList.remove('d-none');
 });
 
+// Turn the "Tutti" sheet into our player shape.
+function parsePlayers(sheet) {
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+  // Find the header row (the one that has both "Id" and "Nome").
+  const headerIdx = rows.findIndex((r) => r.includes('Id') && r.includes('Nome'));
+  if (headerIdx === -1) {
+    return [];
+  }
+
+  const head = rows[headerIdx];
+  const col = (name) => head.indexOf(name);
+  const cId = col('Id');
+  const cRM = col('RM');
+  const cNome = col('Nome');
+  const cSquadra = col('Squadra');
+  const cQtA = col('Qt.A M');
+  const cQtI = col('Qt.I M');
+  const cDiff = col('Diff.M');
+  const cFvm = col('FVM M');
+
+  const players = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r[cId] === '' || r[cNome] === '') {
+      continue;
+    }
+    players.push({
+      id: r[cId],
+      roles: String(r[cRM] || '')
+        .split(';')
+        .map((s) => s.trim())
+        .filter(Boolean),
+      name: r[cNome],
+      team: r[cSquadra],
+      qt: r[cQtA],
+      qtInitial: r[cQtI],
+      diff: r[cDiff],
+      fvm: r[cFvm],
+    });
+  }
+  return players;
+}
+
+// Gather form + parsed players into one auction object.
+function buildAuction() {
+  const teams = [...teamNamesBlock.querySelectorAll('input')].map((i) =>
+    i.value.trim()
+  );
+  return {
+    leagueName: leagueName.value.trim(),
+    initialCredits: parseInt(initialCredits.value, 10),
+    maxBuyableEnabled: enableMaxBuyable.checked,
+    maxBuyable: parseInt(maxBuyable.value, 10),
+    teams,
+    players: parsedPlayers,
+  };
+}
+
 playersFile.addEventListener('change', async () => {
+  createAuctionBtn.classList.add('d-none');
+  saveStatus.innerHTML = '';
+  parsedPlayers = null;
+
   const file = playersFile.files[0];
   if (!file) {
     return;
@@ -75,6 +144,40 @@ playersFile.addEventListener('change', async () => {
   if (!workbook.SheetNames.includes('Tutti')) {
     alert('No "Tutti" sheet found — this is probably the wrong file.');
     playersFile.value = '';
+    return;
+  }
+
+  parsedPlayers = parsePlayers(workbook.Sheets['Tutti']);
+  if (parsedPlayers.length === 0) {
+    alert('Could not read any players from the "Tutti" sheet.');
+    playersFile.value = '';
+    return;
+  }
+
+  saveStatus.innerHTML = `<div class="text-muted">${parsedPlayers.length} players loaded. Ready to create.</div>`;
+  createAuctionBtn.classList.remove('d-none');
+});
+
+createAuctionBtn.addEventListener('click', async () => {
+  const auction = buildAuction();
+
+  createAuctionBtn.disabled = true;
+  saveStatus.innerHTML = '<div class="text-muted">Saving…</div>';
+
+  try {
+    const res = await fetch('/api/auctions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(auction),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Save failed');
+    }
+    saveStatus.innerHTML = `<div class="alert alert-success">Saved as <code>${data.id}.json</code> in the auctions/ folder.</div>`;
+  } catch (err) {
+    saveStatus.innerHTML = `<div class="alert alert-danger">Could not save: ${err.message}</div>`;
+    createAuctionBtn.disabled = false;
   }
 });
 

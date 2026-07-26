@@ -1,0 +1,25 @@
+/* fcManager shared theme — single source of truth for brand colors.
+   Link this on EVERY page (before the page-specific CSS).
+   For any primary action button, use: class="btn btn-orange". */
+
+:root {
+  --fcm-orange: #ffa012;
+  --fcm-orange-hover: #e08e00;
+}
+
+/* Brand action button. Overrides Bootstrap's button variables so
+   default/hover/active/disabled states all stay on-brand automatically. */
+.btn-orange {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--fcm-orange);
+  --bs-btn-border-color: var(--fcm-orange);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--fcm-orange-hover);
+  --bs-btn-hover-border-color: var(--fcm-orange-hover);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--fcm-orange-hover);
+  --bs-btn-active-border-color: var(--fcm-orange-hover);
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: var(--fcm-orange);
+  --bs-btn-disabled-border-color: var(--fcm-orange);
+}
