@@ -23,39 +23,26 @@ function esc(v) {
     .replace(/>/g, '&gt;');
 }
 
+function roleBadges(p) {
+  return (p.roles || [])
+    .map((r) => `<span class="role-badge role-${esc(r)}">${esc(r)}</span>`)
+    .join('');
+}
+
 function playerRow(p) {
-  return `<tr data-id="${esc(p.id)}">
+  const selected = String(p.id) === String(selectedId) ? ' class="selected-row"' : '';
+  return `<tr data-id="${esc(p.id)}"${selected}>
     <td>${esc(p.name)}</td>
     <td>${esc(p.team)}</td>
-    <td>${(p.roles || [])
-      .map((r) => `<span class="role-badge role-${esc(r)}">${esc(r)}</span>`)
-      .join('')}</td>
+    <td>${roleBadges(p)}</td>
     <td class="text-end">${esc(p.qt)}</td>
-    <td class="text-end">${esc(p.qtInitial)}</td>
-    <td class="text-end">${esc(p.diff)}</td>
     <td class="text-end">${esc(p.fvm)}</td>
     <td></td>
   </tr>`;
 }
 
-function renderPlayers(players) {
-  if (!players || players.length === 0) {
-    playerListBody.innerHTML =
-      '<tr><td colspan="8" class="text-muted text-center py-4">No players loaded.</td></tr>';
-    return;
-  }
-  playerListBody.innerHTML = players.map(playerRow).join('');
-}
-
-const auction = loadAuction();
-
-if (!auction) {
-  playerListBody.innerHTML =
-    '<tr><td colspan="8" class="text-muted text-center py-4">No auction loaded — go Home → Continue and pick a saved file.</td></tr>';
-} else {
-  document.getElementById('auctionLeague').textContent = auction.leagueName;
-  document.getElementById('soldCounter').textContent = `sold 0 / ${auction.players.length}`;
-  renderPlayers(auction.players);
+function emptyRow(message) {
+  return `<tr><td colspan="6" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
 // Sortable columns: header element + comparator. Comparator gets the sort
@@ -63,14 +50,17 @@ if (!auction) {
 const sortHeaders = {
   name: document.getElementById('sortName'),
   team: document.getElementById('sortTeam'),
+  roles: document.getElementById('sortRoles'),
+  qt: document.getElementById('sortQt'),
 };
 
-const text = (row, i) => row.cells[i].textContent.trim();
-const num = (row, i) => parseFloat(row.cells[i].textContent) || 0;
 const dir = (v, asc) => (asc ? v : -v);
-const byName = (a, b) => text(a, 0).localeCompare(text(b, 0), 'it', { sensitivity: 'base' });
-const byTeam = (a, b) => text(a, 1).localeCompare(text(b, 1), 'it', { sensitivity: 'base' });
-const byQtDesc = (a, b) => num(b, 3) - num(a, 3); // Qt.A M, highest first
+const str = (v) => String(v ?? '');
+const num = (v) => parseFloat(v) || 0;
+const byName = (a, b) => str(a.name).localeCompare(str(b.name), 'it', { sensitivity: 'base' });
+const byTeam = (a, b) => str(a.team).localeCompare(str(b.team), 'it', { sensitivity: 'base' });
+const byQtDesc = (a, b) => num(b.qt) - num(a.qt); // Qt.A M, highest first
+const byRoleCount = (a, b) => (a.roles || []).length - (b.roles || []).length;
 
 const comparators = {
   name: (a, b, asc) => dir(byName(a, b), asc),
@@ -79,37 +69,245 @@ const comparators = {
     const t = dir(byTeam(a, b), asc);
     return t !== 0 ? t : byQtDesc(a, b);
   },
+  // Number of roles a player covers; same count → Qt.A M descending.
+  roles: (a, b, asc) => {
+    const r = dir(byRoleCount(a, b), asc);
+    return r !== 0 ? r : byQtDesc(a, b);
+  },
+  // Qt.A M value; same price → name ascending, regardless of Qt direction.
+  qt: (a, b, asc) => {
+    const q = dir(num(a.qt) - num(b.qt), asc);
+    return q !== 0 ? q : byName(a, b);
+  },
 };
 
+// --- View state: filter + sort live on the data, the DOM is rebuilt from it ---
+const roleChecks = [...document.querySelectorAll('#roleFilter .btn-check')];
+
+let allPlayers = [];
 let sortKey = null;
 let sortAsc = true;
+let selectedId = null;
+
+function selectedRoles() {
+  return new Set(roleChecks.filter((c) => c.checked).map((c) => c.value));
+}
+
+// A player passes when any of its roles is selected.
+function matchesRoles(p, roles) {
+  return (p.roles || []).some((r) => roles.has(r));
+}
+
+function render() {
+  if (allPlayers.length === 0) {
+    playerListBody.innerHTML = emptyRow('No players loaded.');
+    return;
+  }
+
+  const roles = selectedRoles();
+  const visible = allPlayers.filter((p) => matchesRoles(p, roles));
+
+  if (sortKey) {
+    visible.sort((a, b) => comparators[sortKey](a, b, sortAsc));
+  }
+
+  playerListBody.innerHTML =
+    visible.length === 0 ? emptyRow('No players match the selected roles.') : visible.map(playerRow).join('');
+}
 
 function sortBy(key) {
   sortAsc = sortKey === key ? !sortAsc : true;
   sortKey = key;
 
-  const rows = [...playerListBody.querySelectorAll('tr')];
-  rows.sort((a, b) => comparators[key](a, b, sortAsc));
-  rows.forEach((r) => playerListBody.appendChild(r));
-
   // Only the active column shows a direction caret.
   for (const [k, header] of Object.entries(sortHeaders)) {
     header.dataset.dir = k === key ? (sortAsc ? 'asc' : 'desc') : '';
   }
+  render();
 }
 
 for (const [key, header] of Object.entries(sortHeaders)) {
   header.addEventListener('click', () => sortBy(key));
 }
 
-// --- Role filter: select all / deselect all ---
-const roleChecks = document.querySelectorAll('#roleFilter .btn-check');
-
+// --- Role filter ---
 function setAllRoles(checked) {
   roleChecks.forEach((c) => {
     c.checked = checked;
   });
 }
 
-document.getElementById('rolesAll').addEventListener('click', () => setAllRoles(true));
-document.getElementById('rolesNone').addEventListener('click', () => setAllRoles(false));
+roleChecks.forEach((c) => c.addEventListener('change', render));
+document.getElementById('rolesAll').addEventListener('click', () => {
+  setAllRoles(true);
+  render();
+});
+document.getElementById('rolesNone').addEventListener('click', () => {
+  setAllRoles(false);
+  render();
+});
+
+// --- Player search: type-ahead dropdown, max 5 hits ---
+const searchInput = document.getElementById('playerSearch');
+const searchResults = document.getElementById('searchResults');
+const selectedLabel = document.getElementById('selectedPlayer');
+
+const MAX_HITS = 5;
+let hits = []; // players currently listed in the dropdown
+let activeHit = -1; // keyboard cursor into hits
+
+// Fold accents and case so "jose" matches "José".
+function norm(v) {
+  return String(v ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+// Names starting with the query rank above names merely containing it;
+// within each group the pricier player (Qt.A M) comes first.
+function searchPlayers(query) {
+  const q = norm(query);
+  const scored = [];
+  for (const p of allPlayers) {
+    const at = norm(p.name).indexOf(q);
+    if (at !== -1) {
+      scored.push({ p, starts: at === 0 ? 0 : 1 });
+    }
+  }
+  scored.sort((a, b) => a.starts - b.starts || byQtDesc(a.p, b.p));
+  return scored.slice(0, MAX_HITS).map((s) => s.p);
+}
+
+function closeResults() {
+  hits = [];
+  activeHit = -1;
+  searchResults.hidden = true;
+  searchResults.innerHTML = '';
+  searchInput.setAttribute('aria-expanded', 'false');
+}
+
+function renderResults() {
+  searchResults.innerHTML = hits
+    .map(
+      (p, i) => `<li role="option" data-index="${i}"${i === activeHit ? ' class="active"' : ''}>
+        <span class="hit-name">${esc(p.name)}</span>
+        <span class="hit-team">${esc(p.team)}</span>
+        <span class="hit-roles">${roleBadges(p)}</span>
+      </li>`
+    )
+    .join('');
+  searchResults.hidden = false;
+  searchInput.setAttribute('aria-expanded', 'true');
+}
+
+function moveActive(step) {
+  if (hits.length === 0) {
+    return;
+  }
+  activeHit = (activeHit + step + hits.length) % hits.length;
+  renderResults();
+}
+
+// Pick a player: label it, mark its row, and (when coming from the search box)
+// bring the row into view. The search is unfiltered, so the row may be hidden
+// by the role filter — then there is nothing to scroll to and only the label
+// updates. Clicks from the table skip the scroll: that row is already on screen.
+// "Selected: Name, Team [badges]" — name and team in the app orange.
+function showSelected(p) {
+  selectedLabel.innerHTML = p
+    ? `Selected: <span class="selected-name">${esc(p.name)}, ${esc(p.team)}</span>${roleBadges(p)}`
+    : 'Selected: —';
+}
+
+function selectPlayer(p, { scroll = false } = {}) {
+  selectedId = p.id;
+  showSelected(p);
+  searchInput.value = '';
+  closeResults();
+  render();
+  if (scroll) {
+    playerListBody.querySelector('.selected-row')?.scrollIntoView({ block: 'center' });
+  }
+}
+
+// Clicking a row selects that player.
+playerListBody.addEventListener('click', (e) => {
+  const tr = e.target.closest('tr[data-id]');
+  if (!tr) {
+    return;
+  }
+  const p = allPlayers.find((x) => String(x.id) === tr.dataset.id);
+  if (p) {
+    selectPlayer(p);
+  }
+});
+
+// Reset: drop the current pick and empty the search box.
+function clearSelection() {
+  selectedId = null;
+  showSelected(null);
+  searchInput.value = '';
+  closeResults();
+  render();
+}
+
+document.getElementById('resetBtn').addEventListener('click', clearSelection);
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim();
+  if (q === '') {
+    closeResults();
+    return;
+  }
+  hits = searchPlayers(q);
+  activeHit = hits.length > 0 ? 0 : -1;
+  if (hits.length === 0) {
+    closeResults();
+    return;
+  }
+  renderResults();
+});
+
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    moveActive(1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    moveActive(-1);
+  } else if (e.key === 'Enter' && activeHit >= 0) {
+    e.preventDefault();
+    selectPlayer(hits[activeHit], { scroll: true });
+  } else if (e.key === 'Escape') {
+    closeResults();
+  }
+});
+
+// mousedown, not click: fires before the input's blur closes the list.
+searchResults.addEventListener('mousedown', (e) => {
+  const li = e.target.closest('li[data-index]');
+  if (li) {
+    e.preventDefault();
+    selectPlayer(hits[Number(li.dataset.index)], { scroll: true });
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#searchWrap')) {
+    closeResults();
+  }
+});
+
+// --- Boot ---
+const auction = loadAuction();
+
+if (!auction) {
+  playerListBody.innerHTML = emptyRow('No auction loaded — go Home → Continue and pick a saved file.');
+} else {
+  allPlayers = auction.players || [];
+  document.getElementById('auctionLeague').textContent = auction.leagueName;
+  document.getElementById('soldCounter').textContent = `sold 0 / ${allPlayers.length}`;
+  setAllRoles(true); // start unfiltered
+  render();
+}

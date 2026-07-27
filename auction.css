@@ -1,4 +1,4 @@
-/* Auction page — full-height layout: sticky header, scrollable middle, sticky action bar. */
+/* Auction page — full-height layout: sticky header, scrollable middle. */
 
 body {
   background-color: #f8f9fa;
@@ -227,24 +227,98 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   margin-top: 0.25rem;
 }
 
-/* ACTION BAR */
-#actionBar {
-  flex: 0 0 auto;
+/* SELECTION SECTION — search + current pick + assign controls.
+   Rule below it splits selection from the role filter block. */
+#selectionSection {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1.25rem;
-  background: #fff;
-  border-top: 1px solid #dee2e6;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid #dee2e6;
 }
 
 #selectedPlayer {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   font-weight: 600;
+}
+
+#selectedPlayer .selected-name {
+  color: var(--fcm-orange);
+}
+
+/* Flex gap already spaces the badges — drop the badge's own margin. */
+#selectedPlayer .role-badge {
+  margin-right: 0;
+}
+
+/* Type-ahead dropdown — floats over the table, anchored to the search box. */
+#searchWrap {
+  position: relative;
+}
+
+#searchResults {
+  position: absolute;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+#searchResults li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#searchResults li:hover,
+#searchResults li.active {
+  background: #f1f3f5;
+}
+
+#searchResults .hit-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Team sits between name and badges; badges hug the right edge. */
+#searchResults .hit-team {
+  color: #6c757d;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+#searchResults .hit-roles {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Rows are clickable: clicking one selects that player. */
+#playerListBody tr {
+  cursor: pointer;
+}
+
+/* Picked row — from the search box or from a click. Wins over table-hover. */
+#playerListBody tr.selected-row > td {
+  background-color: rgba(245, 166, 35, 0.18);
 }
 
 .action-controls {
   display: flex;
+  flex-wrap: wrap; /* narrow column: controls wrap instead of overflowing */
   align-items: center;
   gap: 0.5rem;
 }
@@ -252,6 +326,11 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 .action-controls .form-select,
 .action-controls .form-control {
   width: auto;
+}
+
+#assignTeam {
+  flex: 1 1 6rem;
+  min-width: 0;
 }
 
 #assignPrice {
