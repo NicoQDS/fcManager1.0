@@ -45,7 +45,7 @@ function playerRow(p) {
     <td>${roleBadges(p)}</td>
     <td class="text-end">${esc(p.qt)}</td>
     <td class="text-end">${esc(p.fvm)}</td>
-    <td>${sold}</td>
+    <td class="text-center">${sold}</td>
   </tr>`;
 }
 
@@ -165,22 +165,6 @@ document.getElementById('rolesNone').addEventListener('click', () => {
 const teamsZone = document.getElementById('teamsZone');
 const assignTeam = document.getElementById('assignTeam');
 
-// Mantra roles collapse into the four classic lines for the slot counter.
-const ROLE_LINE = {
-  Por: 'P',
-  Dd: 'D',
-  Dc: 'D',
-  Ds: 'D',
-  B: 'D',
-  E: 'C',
-  M: 'C',
-  C: 'C',
-  W: 'C',
-  T: 'C',
-  A: 'A',
-  Pc: 'A',
-};
-
 // One entry per team in the auction: credits left plus the players bought.
 let teams = [];
 
@@ -188,34 +172,23 @@ function makeTeams(names, credits) {
   return (names || []).map((name) => ({ name, credits, roster: [] }));
 }
 
-// A player counts on the line of its first role (its main one in the file).
-function slotCounts(team) {
-  const counts = { P: 0, D: 0, C: 0, A: 0 };
-  for (const p of team.roster) {
-    const line = ROLE_LINE[(p.roles || [])[0]];
-    if (line) {
-      counts[line] += 1;
-    }
-  }
-  return counts;
-}
-
 function teamCard(team) {
-  const c = slotCounts(team);
-  return `<div class="team-card" data-team="${esc(team.name)}">
+  const active = team.name === assignTeam.value ? ' active' : '';
+  return `<div class="team-card${active}" data-team="${esc(team.name)}">
     <div class="team-card-head">
       <span class="team-name">${esc(team.name)}</span>
       <span class="team-credits">${esc(team.credits)} fM</span>
     </div>
-    <div class="team-slots">P${c.P} · D${c.D} · C${c.C} · A${c.A}</div>
   </div>`;
 }
 
+// Richest team on top; equal purses keep a stable order by name.
 function renderTeams() {
+  const ordered = [...teams].sort((a, b) => b.credits - a.credits || byName(a, b));
   teamsZone.innerHTML =
-    teams.length === 0
+    ordered.length === 0
       ? '<p class="text-muted">No teams in this auction.</p>'
-      : teams.map(teamCard).join('');
+      : ordered.map(teamCard).join('');
 }
 
 // Assign dropdown draws on the same team list; the placeholder stays first.
@@ -224,6 +197,21 @@ function fillTeamSelect() {
     '<option value="">Team…</option>' +
     teams.map((t) => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
 }
+
+// Cards are the second way to pick the buying team: clicking one drives the
+// same dropdown, and clicking the active card again clears the choice.
+teamsZone.addEventListener('click', (e) => {
+  const card = e.target.closest('.team-card[data-team]');
+  if (!card) {
+    return;
+  }
+  const name = card.dataset.team;
+  assignTeam.value = assignTeam.value === name ? '' : name;
+  renderTeams();
+});
+
+// Keep the cards in step when the team is picked from the dropdown instead.
+assignTeam.addEventListener('change', renderTeams);
 
 // --- Player search: type-ahead dropdown, max 5 hits ---
 const searchInput = document.getElementById('playerSearch');
@@ -268,11 +256,20 @@ function closeResults() {
 function renderResults() {
   searchResults.innerHTML = hits
     .map(
-      (p, i) => `<li role="option" data-index="${i}"${i === activeHit ? ' class="active"' : ''}>
+      (p, i) => {
+        // Sold hits stay listed so you can look a player up, but they are
+        // marked and refused on click, same as their row in the table.
+        const classes = [i === activeHit ? 'active' : '', p.soldTo ? 'hit-is-sold' : '']
+          .filter(Boolean)
+          .join(' ');
+        return `<li role="option" data-index="${i}"${classes ? ` class="${classes}"` : ''}>
         <span class="hit-name">${esc(p.name)}</span>
         <span class="hit-team">${esc(p.team)}</span>
-        <span class="hit-roles">${roleBadges(p)}</span>
-      </li>`
+        <span class="hit-roles">${roleBadges(p)}${
+          p.soldTo ? `<span class="hit-sold">${esc(p.soldTo)}</span>` : ''
+        }</span>
+      </li>`;
+      }
     )
     .join('');
   searchResults.hidden = false;
@@ -295,18 +292,23 @@ function moveActive(step) {
 // sold players carry who bought them, since Assign will refuse them.
 function showSelected(p) {
   if (!p) {
-    selectedLabel.innerHTML = 'Selected: —';
+    selectedLabel.className = 'is-empty';
+    selectedLabel.innerHTML = '<span class="selected-empty">No player selected</span>';
     return;
   }
-  const sold = p.soldTo
-    ? `<span class="selected-sold">sold to ${esc(p.soldTo)} · ${esc(p.price)} fM</span>`
-    : '';
-  selectedLabel.innerHTML = `Selected: <span class="selected-name">${esc(p.name)}, ${esc(
-    p.team
-  )}</span>${roleBadges(p)}${sold}`;
+  // The strip takes the colour of the first (main) role badge.
+  selectedLabel.className = `pick-${esc((p.roles || [])[0] || '')}`;
+  selectedLabel.innerHTML = `<span class="selected-name">${esc(p.name)}</span>
+    <span class="selected-team">${esc(p.team)}</span>
+    <span class="selected-badges">${roleBadges(p)}</span>`;
 }
 
 function selectPlayer(p, { scroll = false } = {}) {
+  // Sold players are out of the auction: they never reach the selection field.
+  if (p.soldTo) {
+    message(`${p.name} is already sold to ${p.soldTo} for ${p.price} fM.`);
+    return;
+  }
   selectedId = p.id;
   showSelected(p);
   searchInput.value = '';
@@ -496,6 +498,19 @@ function assign() {
 }
 
 assignBtn.addEventListener('click', assign);
+
+// Enter anywhere on the page confirms the sale, but only once player, team and
+// price are all set — otherwise it would fire on every stray Enter. Skips the
+// search box picking a hit (that keydown calls preventDefault) and buttons,
+// which turn Enter into their own click.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.defaultPrevented || e.target.tagName === 'BUTTON') {
+    return;
+  }
+  if (playerById(selectedId) && assignTeam.value && assignPrice.value.trim() !== '') {
+    assign();
+  }
+});
 saveBtn.addEventListener('click', async () => {
   message('Saving…', 'ok');
   if (await persist()) {
@@ -512,9 +527,11 @@ if (!auction) {
   allPlayers = auction.players || [];
   teams = makeTeams(auction.teams, auction.initialCredits);
   hydrateTeams(); // replay past assignments into credits and rosters
+  showSelected(null);
   document.getElementById('auctionLeague').textContent = auction.leagueName;
   updateSoldCounter();
   setAllRoles(true); // start unfiltered
+  hideSold.checked = false; // browsers restore checkbox state on reload
   render();
   renderTeams();
   fillTeamSelect();

@@ -44,7 +44,9 @@
                   />
                   <ul id="searchResults" role="listbox" hidden></ul>
                 </div>
-                <span id="selectedPlayer">Selected: —</span>
+                <span id="selectedPlayer" class="is-empty">
+                  <span class="selected-empty">No player selected</span>
+                </span>
                 <div class="action-controls">
                   <select id="assignTeam" class="form-select form-select-sm">
                     <option value="">Team…</option>
@@ -67,7 +69,7 @@
                 <button type="button" id="rolesAll" class="btn btn-link btn-sm p-0">Select all</button>
                 <button type="button" id="rolesNone" class="btn btn-link btn-sm p-0">Deselect all</button>
                 <div id="statusFilters" class="form-check">
-                  <input type="checkbox" class="form-check-input" id="hideSold" />
+                  <input type="checkbox" class="form-check-input" id="hideSold" autocomplete="off" />
                   <label class="form-check-label" for="hideSold">Hide sold</label>
                 </div>
               </div>
@@ -115,7 +117,7 @@
                     Qt <span class="sort-caret"></span>
                   </th>
                   <th class="text-end">FVM</th>
-                  <th></th>
+                  <th class="text-center">Sold</th>
                 </tr>
               </thead>
               <tbody id="playerListBody">
@@ -123,18 +125,18 @@
                 <tr>
                   <td>Lautaro Martinez</td><td>Inter</td>
                   <td><span class="role-badge role-A">A</span></td>
-                  <td class="text-end">30</td><td class="text-end">95</td><td></td>
+                  <td class="text-end">30</td><td class="text-end">95</td><td class="text-center"></td>
                 </tr>
                 <tr>
                   <td>Theo Hernandez</td><td>Milan</td>
                   <td><span class="role-badge role-Ds">Ds</span><span class="role-badge role-E">E</span></td>
-                  <td class="text-end">18</td><td class="text-end">60</td><td></td>
+                  <td class="text-end">18</td><td class="text-end">60</td><td class="text-center"></td>
                 </tr>
                 <tr class="sold-row">
                   <td>Carnesecchi</td><td>Atalanta</td>
                   <td><span class="role-badge role-Por">Por</span></td>
                   <td class="text-end">18</td><td class="text-end">80</td>
-                  <td><span class="badge text-bg-secondary">sold</span></td>
+                  <td class="text-center"><span class="badge text-bg-secondary">Nico · 18</span></td>
                 </tr>
               </tbody>
               </table>
