@@ -253,6 +253,26 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   margin-right: 0;
 }
 
+#selectedPlayer .selected-sold {
+  color: #6c757d;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+/* Assign feedback — empty string collapses the line, so nothing jumps. */
+#assignMsg {
+  font-size: 0.85rem;
+  min-height: 1.2em;
+}
+
+#assignMsg.error {
+  color: #dc3545;
+}
+
+#assignMsg.ok {
+  color: #198754;
+}
+
 /* Type-ahead dropdown — floats over the table, anchored to the search box. */
 #searchWrap {
   position: relative;

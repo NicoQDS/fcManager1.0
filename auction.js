@@ -30,14 +30,22 @@ function roleBadges(p) {
 }
 
 function playerRow(p) {
-  const selected = String(p.id) === String(selectedId) ? ' class="selected-row"' : '';
-  return `<tr data-id="${esc(p.id)}"${selected}>
+  const classes = [
+    String(p.id) === String(selectedId) ? 'selected-row' : '',
+    p.soldTo ? 'sold-row' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const sold = p.soldTo
+    ? `<span class="badge text-bg-secondary">${esc(p.soldTo)} · ${esc(p.price)}</span>`
+    : '';
+  return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
     <td>${esc(p.name)}</td>
     <td>${esc(p.team)}</td>
     <td>${roleBadges(p)}</td>
     <td class="text-end">${esc(p.qt)}</td>
     <td class="text-end">${esc(p.fvm)}</td>
-    <td></td>
+    <td>${sold}</td>
   </tr>`;
 }
 
@@ -98,6 +106,8 @@ function matchesRoles(p, roles) {
   return (p.roles || []).some((r) => roles.has(r));
 }
 
+const hideSold = document.getElementById('hideSold');
+
 function render() {
   if (allPlayers.length === 0) {
     playerListBody.innerHTML = emptyRow('No players loaded.');
@@ -105,15 +115,19 @@ function render() {
   }
 
   const roles = selectedRoles();
-  const visible = allPlayers.filter((p) => matchesRoles(p, roles));
+  const visible = allPlayers.filter(
+    (p) => matchesRoles(p, roles) && !(hideSold.checked && p.soldTo)
+  );
 
   if (sortKey) {
     visible.sort((a, b) => comparators[sortKey](a, b, sortAsc));
   }
 
   playerListBody.innerHTML =
-    visible.length === 0 ? emptyRow('No players match the selected roles.') : visible.map(playerRow).join('');
+    visible.length === 0 ? emptyRow('No players match the current filters.') : visible.map(playerRow).join('');
 }
+
+hideSold.addEventListener('change', render);
 
 function sortBy(key) {
   sortAsc = sortKey === key ? !sortAsc : true;
@@ -277,11 +291,19 @@ function moveActive(step) {
 // bring the row into view. The search is unfiltered, so the row may be hidden
 // by the role filter — then there is nothing to scroll to and only the label
 // updates. Clicks from the table skip the scroll: that row is already on screen.
-// "Selected: Name, Team [badges]" — name and team in the app orange.
+// "Selected: Name, Team [badges]" — name and team in the app orange. Already
+// sold players carry who bought them, since Assign will refuse them.
 function showSelected(p) {
-  selectedLabel.innerHTML = p
-    ? `Selected: <span class="selected-name">${esc(p.name)}, ${esc(p.team)}</span>${roleBadges(p)}`
-    : 'Selected: —';
+  if (!p) {
+    selectedLabel.innerHTML = 'Selected: —';
+    return;
+  }
+  const sold = p.soldTo
+    ? `<span class="selected-sold">sold to ${esc(p.soldTo)} · ${esc(p.price)} fM</span>`
+    : '';
+  selectedLabel.innerHTML = `Selected: <span class="selected-name">${esc(p.name)}, ${esc(
+    p.team
+  )}</span>${roleBadges(p)}${sold}`;
 }
 
 function selectPlayer(p, { scroll = false } = {}) {
@@ -312,6 +334,7 @@ function clearSelection() {
   selectedId = null;
   showSelected(null);
   searchInput.value = '';
+  message('');
   closeResults();
   render();
 }
@@ -363,6 +386,123 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// --- Assign a player to a team ---
+const assignBtn = document.getElementById('assignBtn');
+const assignPrice = document.getElementById('assignPrice');
+const assignMsg = document.getElementById('assignMsg');
+const soldCounter = document.getElementById('soldCounter');
+const saveBtn = document.getElementById('saveBtn');
+
+function message(text, kind = 'error') {
+  assignMsg.textContent = text;
+  assignMsg.className = text ? kind : '';
+}
+
+function teamByName(name) {
+  return teams.find((t) => t.name === name);
+}
+
+function playerById(id) {
+  return allPlayers.find((p) => String(p.id) === String(id));
+}
+
+function updateSoldCounter() {
+  const sold = allPlayers.filter((p) => p.soldTo).length;
+  soldCounter.textContent = `sold ${sold} / ${allPlayers.length}`;
+}
+
+// Credits and rosters are not stored: they are replayed from the players'
+// soldTo/price on load, so the saved file has a single source of truth.
+function hydrateTeams() {
+  for (const p of allPlayers) {
+    if (!p.soldTo) {
+      continue;
+    }
+    const t = teamByName(p.soldTo);
+    if (t) {
+      t.roster.push(p);
+      t.credits -= num(p.price);
+    } else {
+      p.soldTo = null; // team no longer in the auction — release the player
+      p.price = null;
+    }
+  }
+}
+
+// Write the auction back: sessionStorage keeps this tab in sync on reload,
+// the server keeps the file in auctions/ current.
+async function persist() {
+  sessionStorage.setItem('fcmAuction', JSON.stringify(auction));
+
+  if (!auction.id) {
+    message('Saved in this tab only — this auction file has no id.', 'error');
+    return false;
+  }
+
+  try {
+    const res = await fetch(`/api/auctions/${encodeURIComponent(auction.id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(auction),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || res.statusText);
+    }
+    return true;
+  } catch (err) {
+    message(`Could not save to the server: ${err.message}`, 'error');
+    return false;
+  }
+}
+
+function assign() {
+  const p = playerById(selectedId);
+  if (!p) {
+    return message('Pick a player first.');
+  }
+  if (p.soldTo) {
+    return message(`${p.name} is already sold to ${p.soldTo} for ${p.price} fM.`);
+  }
+
+  const team = teamByName(assignTeam.value);
+  if (!team) {
+    return message('Pick a team.');
+  }
+
+  const price = Number(assignPrice.value);
+  if (!Number.isInteger(price) || price < 1) {
+    return message('Price must be a whole number of at least 1 fM.');
+  }
+  if (price > team.credits) {
+    return message(`${team.name} has only ${team.credits} fM left.`);
+  }
+  if (auction.maxBuyableEnabled && team.roster.length >= auction.maxBuyable) {
+    return message(`${team.name} already has ${auction.maxBuyable} players.`);
+  }
+
+  p.soldTo = team.name;
+  p.price = price;
+  team.roster.push(p);
+  team.credits -= price;
+
+  assignPrice.value = '';
+  assignTeam.value = '';
+  clearSelection();
+  renderTeams();
+  updateSoldCounter();
+  message(`${p.name} to ${team.name} for ${price} fM.`, 'ok');
+  persist();
+}
+
+assignBtn.addEventListener('click', assign);
+saveBtn.addEventListener('click', async () => {
+  message('Saving…', 'ok');
+  if (await persist()) {
+    message('Saved.', 'ok');
+  }
+});
+
 // --- Boot ---
 const auction = loadAuction();
 
@@ -371,8 +511,9 @@ if (!auction) {
 } else {
   allPlayers = auction.players || [];
   teams = makeTeams(auction.teams, auction.initialCredits);
+  hydrateTeams(); // replay past assignments into credits and rosters
   document.getElementById('auctionLeague').textContent = auction.leagueName;
-  document.getElementById('soldCounter').textContent = `sold 0 / ${allPlayers.length}`;
+  updateSoldCounter();
   setAllRoles(true); // start unfiltered
   render();
   renderTeams();

@@ -52,6 +52,30 @@ app.post('/api/auctions', (req, res) => {
   res.status(201).json({ id });
 });
 
+// PUT /api/auctions/:id — overwrite an existing auction (assignments, credits).
+app.put('/api/auctions/:id', (req, res) => {
+  const id = req.params.id;
+  const auction = req.body;
+
+  // Ids come from timestamp + league name; anything with a path separator is
+  // not one of ours and must never reach path.join.
+  if (/[\/\\]/.test(id) || id.includes('..')) {
+    return res.status(400).json({ error: 'Bad auction id' });
+  }
+
+  if (!auction || typeof auction !== 'object' || !Array.isArray(auction.players)) {
+    return res.status(400).json({ error: 'Missing auction data' });
+  }
+
+  const file = path.join(AUCTIONS_DIR, `${id}.json`);
+  if (!fs.existsSync(file)) {
+    return res.status(404).json({ error: 'No such auction' });
+  }
+
+  fs.writeFileSync(file, JSON.stringify({ ...auction, id }, null, 2));
+  res.json({ id });
+});
+
 // Start listening for requests.
 app.listen(PORT, () => {
   console.log(`fcManager running at http://localhost:${PORT}`);
