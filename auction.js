@@ -147,6 +147,70 @@ document.getElementById('rolesNone').addEventListener('click', () => {
   render();
 });
 
+// --- Teams sidebar ---
+const teamsZone = document.getElementById('teamsZone');
+const assignTeam = document.getElementById('assignTeam');
+
+// Mantra roles collapse into the four classic lines for the slot counter.
+const ROLE_LINE = {
+  Por: 'P',
+  Dd: 'D',
+  Dc: 'D',
+  Ds: 'D',
+  B: 'D',
+  E: 'C',
+  M: 'C',
+  C: 'C',
+  W: 'C',
+  T: 'C',
+  A: 'A',
+  Pc: 'A',
+};
+
+// One entry per team in the auction: credits left plus the players bought.
+let teams = [];
+
+function makeTeams(names, credits) {
+  return (names || []).map((name) => ({ name, credits, roster: [] }));
+}
+
+// A player counts on the line of its first role (its main one in the file).
+function slotCounts(team) {
+  const counts = { P: 0, D: 0, C: 0, A: 0 };
+  for (const p of team.roster) {
+    const line = ROLE_LINE[(p.roles || [])[0]];
+    if (line) {
+      counts[line] += 1;
+    }
+  }
+  return counts;
+}
+
+function teamCard(team) {
+  const c = slotCounts(team);
+  return `<div class="team-card" data-team="${esc(team.name)}">
+    <div class="team-card-head">
+      <span class="team-name">${esc(team.name)}</span>
+      <span class="team-credits">${esc(team.credits)} fM</span>
+    </div>
+    <div class="team-slots">P${c.P} · D${c.D} · C${c.C} · A${c.A}</div>
+  </div>`;
+}
+
+function renderTeams() {
+  teamsZone.innerHTML =
+    teams.length === 0
+      ? '<p class="text-muted">No teams in this auction.</p>'
+      : teams.map(teamCard).join('');
+}
+
+// Assign dropdown draws on the same team list; the placeholder stays first.
+function fillTeamSelect() {
+  assignTeam.innerHTML =
+    '<option value="">Team…</option>' +
+    teams.map((t) => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
+}
+
 // --- Player search: type-ahead dropdown, max 5 hits ---
 const searchInput = document.getElementById('playerSearch');
 const searchResults = document.getElementById('searchResults');
@@ -306,8 +370,11 @@ if (!auction) {
   playerListBody.innerHTML = emptyRow('No auction loaded — go Home → Continue and pick a saved file.');
 } else {
   allPlayers = auction.players || [];
+  teams = makeTeams(auction.teams, auction.initialCredits);
   document.getElementById('auctionLeague').textContent = auction.leagueName;
   document.getElementById('soldCounter').textContent = `sold 0 / ${allPlayers.length}`;
   setAllRoles(true); // start unfiltered
   render();
+  renderTeams();
+  fillTeamSelect();
 }
