@@ -183,8 +183,16 @@ body {
   color: #fff;
 }
 
+/* Sold badge for a player the user's own team bought. */
+.sold-mine {
+  background-color: var(--fcm-mine);
+  color: #fff;
+}
+
 /* Official mantra line colors (used by badges AND role filter buttons). */
 :root {
+  --fcm-mine: #12b5c4; /* accent for anything belonging to the user's team */
+
   --role-por: #f5a623; /* portiere */
   --role-def: #4caf50; /* linea difensiva */
   --role-mid: #2196f3; /* linea di centrocampo */
@@ -323,8 +331,10 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   padding: 0.15rem 0;
 }
 
-/* Cards double as team pickers for the assign controls. */
+/* Cards double as team pickers for the assign controls. Every orange accent
+   inside a card comes from --card-accent, so one override recolours the card. */
 .team-card {
+  --card-accent: var(--fcm-orange);
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
@@ -335,14 +345,29 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   cursor: pointer;
 }
 
+/* The user's own team runs on its own colour. */
+.team-card.mine {
+  --card-accent: var(--fcm-mine);
+}
+
 .team-card:hover {
-  border-color: var(--fcm-orange);
+  border-color: var(--card-accent);
 }
 
 .team-card.active {
-  border-color: var(--fcm-orange);
-  background: rgba(255, 160, 18, 0.12);
-  box-shadow: inset 3px 0 0 var(--fcm-orange);
+  border-color: var(--card-accent);
+  background: color-mix(in srgb, var(--card-accent) 12%, transparent);
+  box-shadow: inset 3px 0 0 var(--card-accent);
+}
+
+/* Star marks the user's own team; the empty slot keeps the other cards aligned. */
+.team-star {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  width: 14px;
+  margin-left: auto; /* star + name + count ride together on the right */
+  color: var(--card-accent);
 }
 
 /* Standings position — its own box echoing the card's border and radius. */
@@ -361,7 +386,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 
 .team-card:hover .team-rank,
 .team-card.active .team-rank {
-  border-color: var(--fcm-orange);
+  border-color: var(--card-accent);
 }
 
 .team-card-body {
@@ -375,10 +400,9 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   gap: 0.3rem;
 }
 
-/* Credits stay left; name + player count travel together on the right. */
+/* Credits stay left; star + name + player count travel together on the right. */
 .team-name {
   font-weight: 600;
-  margin-left: auto;
 }
 
 .team-count {
@@ -388,7 +412,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 .team-credits {
-  color: var(--fcm-orange);
+  color: var(--card-accent);
   font-weight: 600;
 }
 
@@ -405,7 +429,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 
 .team-bar-fill {
   height: 100%;
-  background: var(--fcm-orange);
+  background: var(--card-accent);
   transition: width 0.2s ease;
 }
 
@@ -588,6 +612,23 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   box-shadow: inset 3px 0 0 var(--fcm-orange);
 }
 
+/* Current pick on the left, assign controls hard right on the same line. */
+#pickRow {
+  display: flex;
+  align-items: stretch; /* controls take the pick strip's height */
+  gap: 0.5rem;
+}
+
+#pickRow #selectedPlayer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#pickRow .action-controls {
+  flex: 0 0 auto;
+  align-items: stretch; /* price box and both buttons match the strip */
+}
+
 .action-controls {
   display: flex;
   flex-wrap: wrap; /* narrow column: controls wrap instead of overflowing */
@@ -600,11 +641,26 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   width: auto;
 }
 
-#assignTeam {
-  flex: 1 1 6rem;
-  min-width: 0;
+/* Icon-only buttons: centre the glyph instead of sitting it on the text baseline. */
+#assignBtn,
+#resetBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
+/* No spinner: the price is typed, and the arrows ate a third of the box. */
 #assignPrice {
-  max-width: 100px;
+  max-width: 75px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+#assignPrice::-webkit-outer-spin-button,
+#assignPrice::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
 }

@@ -28,8 +28,9 @@ function syncTeamNameInputs() {
       wrapper.className = 'mb-2';
       const input = document.createElement('input');
       input.type = 'text';
-      input.className = 'form-control';
-      input.placeholder = `Team ${i}`;
+      // The first slot is the user's own team — marked out from the rest.
+      input.className = i === 1 ? 'form-control user-team' : 'form-control';
+      input.placeholder = i === 1 ? 'Your Team' : `Team ${i}`;
       wrapper.appendChild(input);
       teamNamesBlock.appendChild(wrapper);
     }
@@ -126,6 +127,7 @@ function buildAuction() {
     maxBuyableEnabled: enableMaxBuyable.checked,
     maxBuyable: parseInt(maxBuyable.value, 10),
     teams,
+    userTeam: teams[0] || '', // first name entered is the user's own team
     players: parsedPlayers,
   };
 }
@@ -174,7 +176,10 @@ createAuctionBtn.addEventListener('click', async () => {
     if (!res.ok) {
       throw new Error(data.error || 'Save failed');
     }
-    saveStatus.innerHTML = `<div class="alert alert-success">Saved as <code>${data.id}.json</code> in the auctions/ folder.</div>`;
+    // Straight into the auction — the id comes back from the server, so the
+    // stored copy matches the file the auction page will save back to.
+    sessionStorage.setItem('fcmAuction', JSON.stringify({ id: data.id, ...auction }));
+    window.location.href = 'auction.html';
   } catch (err) {
     saveStatus.innerHTML = `<div class="alert alert-danger">Could not save: ${err.message}</div>`;
     createAuctionBtn.disabled = false;

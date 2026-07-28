@@ -68,3 +68,18 @@ body {
   background-color: var(--fcm-orange);
   color: white;
 }
+
+/* First team slot is the user's own team — orange border marks it out. */
+.user-team {
+  border-color: var(--fcm-orange);
+}
+
+.user-team:focus {
+  border-color: var(--fcm-orange);
+  box-shadow: 0 0 0 0.25rem rgba(245, 166, 35, 0.25);
+}
+
+/* Empty-field warning still wins over the orange marker. */
+.user-team.is-invalid-field {
+  border-color: #f5a3a3;
+}

@@ -36,8 +36,11 @@ function playerRow(p) {
   ]
     .filter(Boolean)
     .join(' ');
+  // The user's own buys carry their own badge colour.
+  const badge =
+    auction && p.soldTo === auction.userTeam ? 'badge sold-mine' : 'badge text-bg-secondary';
   const sold = p.soldTo
-    ? `<span class="badge text-bg-secondary">${esc(p.soldTo)} · ${esc(p.price)}</span>`
+    ? `<span class="${badge}">${esc(p.soldTo)} · ${esc(p.price)}</span>`
     : '';
   // Hiding sold players empties the column, so drop it from the table entirely.
   const soldCell = showSoldColumn() ? `<td class="text-center">${sold}</td>` : '';
@@ -173,26 +176,40 @@ document.getElementById('rolesNone').addEventListener('click', () => {
 
 // --- Teams sidebar ---
 const teamsZone = document.getElementById('teamsZone');
-const assignTeam = document.getElementById('assignTeam');
 
 // One entry per team in the auction: credits left plus the players bought.
 let teams = [];
+
+// Buying team for the next assignment — picked by clicking a card, '' if none.
+let pickedTeam = '';
 
 function makeTeams(names, credits) {
   // `initial` never moves — it is the 100% mark of the purse bar.
   return (names || []).map((name) => ({ name, credits, initial: credits, roster: [] }));
 }
 
+// Bootstrap Icons star-fill, inlined: the page doesn't load the icon font.
+const STAR_FILL = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+  <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.283.95l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+</svg>`;
+
 function teamCard(team, rank) {
-  const active = team.name === assignTeam.value ? ' active' : '';
+  const active = team.name === pickedTeam ? ' active' : '';
   const initial = num(team.initial) || 0;
   // Orange = credits left, black = credits spent.
   const left = initial > 0 ? Math.max(0, Math.min(100, (num(team.credits) / initial) * 100)) : 0;
-  return `<div class="team-card${active}" data-team="${esc(team.name)}">
+  // The slot is rendered on every card so the rank boxes stay in one line;
+  // only the user's own team fills it.
+  const mine = auction && team.name === auction.userTeam ? ' mine' : '';
+  const star = mine
+    ? `<span class="team-star" title="Your team">${STAR_FILL}</span>`
+    : '<span class="team-star"></span>';
+  return `<div class="team-card${mine}${active}" data-team="${esc(team.name)}">
     <div class="team-rank">${esc(rank)}</div>
     <div class="team-card-body">
       <div class="team-card-head">
         <span class="team-credits">${esc(team.credits)} fM</span>
+        ${star}
         <span class="team-name">${esc(team.name)}</span>
         <span class="team-count">${esc(team.roster.length)}</span>
       </div>
@@ -251,27 +268,17 @@ function addLogEntry(player, team, price) {
   renderLog();
 }
 
-// Assign dropdown draws on the same team list; the placeholder stays first.
-function fillTeamSelect() {
-  assignTeam.innerHTML =
-    '<option value="">Team…</option>' +
-    teams.map((t) => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('');
-}
-
-// Cards are the second way to pick the buying team: clicking one drives the
-// same dropdown, and clicking the active card again clears the choice.
+// The cards are the only way to pick the buying team: clicking one selects it,
+// clicking the selected card again clears the choice.
 teamsZone.addEventListener('click', (e) => {
   const card = e.target.closest('.team-card[data-team]');
   if (!card) {
     return;
   }
   const name = card.dataset.team;
-  assignTeam.value = assignTeam.value === name ? '' : name;
+  pickedTeam = pickedTeam === name ? '' : name;
   renderTeams();
 });
-
-// Keep the cards in step when the team is picked from the dropdown instead.
-assignTeam.addEventListener('change', renderTeams);
 
 // --- Player search: type-ahead dropdown, max 5 hits ---
 const searchInput = document.getElementById('playerSearch');
@@ -527,7 +534,7 @@ function assign() {
     return message(`${p.name} is already sold to ${p.soldTo} for ${p.price} fM.`);
   }
 
-  const team = teamByName(assignTeam.value);
+  const team = teamByName(pickedTeam);
   if (!team) {
     return message('Pick a team.');
   }
@@ -551,7 +558,7 @@ function assign() {
   addLogEntry(p, team, price);
 
   assignPrice.value = '';
-  assignTeam.value = '';
+  pickedTeam = '';
   clearSelection();
   renderTeams();
   updateSoldCounter();
@@ -569,7 +576,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || e.defaultPrevented || e.target.tagName === 'BUTTON') {
     return;
   }
-  if (playerById(selectedId) && assignTeam.value && assignPrice.value.trim() !== '') {
+  if (playerById(selectedId) && pickedTeam && assignPrice.value.trim() !== '') {
     assign();
   }
 });
@@ -599,5 +606,4 @@ if (!auction) {
   render();
   renderTeams();
   renderLog();
-  fillTeamSelect();
 }
