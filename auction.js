@@ -193,7 +193,19 @@ const STAR_FILL = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14
   <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.283.95l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
 </svg>`;
 
+// A team is out of the auction once it can't buy anyone else: no credits for
+// even a 1 fM bid, or a full roster when the cap is on.
+function teamIsOut(team) {
+  if (num(team.credits) < 1) {
+    return true;
+  }
+  return Boolean(
+    auction && auction.maxBuyableEnabled && team.roster.length >= auction.maxBuyable
+  );
+}
+
 function teamCard(team, rank) {
+  const out = teamIsOut(team) ? ' out' : '';
   const active = team.name === pickedTeam ? ' active' : '';
   const initial = num(team.initial) || 0;
   // Orange = credits left, black = credits spent.
@@ -204,7 +216,7 @@ function teamCard(team, rank) {
   const star = mine
     ? `<span class="team-star" title="Your team">${STAR_FILL}</span>`
     : '<span class="team-star"></span>';
-  return `<div class="team-card${mine}${active}" data-team="${esc(team.name)}">
+  return `<div class="team-card${mine}${active}${out}" data-team="${esc(team.name)}">
     <div class="team-rank">${esc(rank)}</div>
     <div class="team-card-body">
       <div class="team-card-head">
@@ -228,6 +240,64 @@ function renderTeams() {
     ordered.length === 0
       ? '<p class="text-muted">No teams in this auction.</p>'
       : ordered.map((t, i) => teamCard(t, i + 1)).join('');
+  renderRosters();
+}
+
+// --- Rosters: one card per team, listing the players it bought ---
+const rosterGrid = document.getElementById('rosterGrid');
+
+// Same order as the role filter buttons: goalkeeper, defence, midfield,
+// trequarti, attack. A multi-role player sorts on its first (main) role.
+const ROLE_ORDER = ['Por', 'Dd', 'Dc', 'Ds', 'B', 'E', 'M', 'C', 'W', 'T', 'A', 'Pc'];
+
+function roleRank(p) {
+  const first = (p.roles || [])[0];
+  const i = ROLE_ORDER.indexOf(first);
+  return i === -1 ? ROLE_ORDER.length : i; // unknown or role-less players last
+}
+
+function rosterLine(p) {
+  return `<li class="roster-line">
+    <span class="roster-roles">${roleBadges(p)}</span>
+    <span class="roster-name">${esc(p.name)}</span>
+    <span class="roster-price">${esc(p.price)}</span>
+  </li>`;
+}
+
+function rosterCard(team) {
+  const mine = auction && team.name === auction.userTeam ? ' mine' : '';
+  const star = mine ? `<span class="team-star" title="Your team">${STAR_FILL}</span>` : '';
+  const spent = team.roster.reduce((sum, p) => sum + num(p.price), 0);
+  const players = [...team.roster].sort((a, b) => roleRank(a) - roleRank(b) || byName(a, b));
+
+  return `<div class="roster-card${mine}">
+    <div class="roster-head">
+      ${star}
+      <span class="roster-team">${esc(team.name)}</span>
+      <span class="roster-totals">${team.roster.length} · ${spent} fM</span>
+    </div>
+    <ul class="roster-list">
+      ${
+        players.length === 0
+          ? '<li class="roster-empty">No players yet.</li>'
+          : players.map(rosterLine).join('')
+      }
+    </ul>
+  </div>`;
+}
+
+// The user's own team leads; everyone else follows alphabetically.
+function renderRosters() {
+  const mineName = (auction && auction.userTeam) || '';
+  const ordered = [...teams].sort((a, b) => {
+    if (a.name === mineName) return -1;
+    if (b.name === mineName) return 1;
+    return byName(a, b);
+  });
+  rosterGrid.innerHTML =
+    ordered.length === 0
+      ? '<p class="text-muted">No teams in this auction.</p>'
+      : ordered.map(rosterCard).join('');
 }
 
 // --- Sales log: one line per assignment, stored in the auction file ---
@@ -276,6 +346,10 @@ teamsZone.addEventListener('click', (e) => {
     return;
   }
   const name = card.dataset.team;
+  const team = teamByName(name);
+  if (team && teamIsOut(team)) {
+    return; // spent out or roster full — not a valid buyer any more
+  }
   pickedTeam = pickedTeam === name ? '' : name;
   renderTeams();
 });
@@ -378,6 +452,7 @@ function selectPlayer(p, { scroll = false } = {}) {
   }
   selectedId = p.id;
   showSelected(p);
+  assignPrice.value = '1'; // opening bid — typing over it is one keystroke
   searchInput.value = '';
   closeResults();
   render();
@@ -402,6 +477,7 @@ playerListBody.addEventListener('click', (e) => {
 function clearSelection() {
   selectedId = null;
   showSelected(null);
+  assignPrice.value = '';
   searchInput.value = '';
   message('');
   closeResults();
@@ -459,6 +535,11 @@ document.addEventListener('click', (e) => {
 const assignBtn = document.getElementById('assignBtn');
 const assignPrice = document.getElementById('assignPrice');
 const assignMsg = document.getElementById('assignMsg');
+
+// Clicking the price box wipes the prefilled 1 — type the real bid straight in.
+assignPrice.addEventListener('click', () => {
+  assignPrice.value = '';
+});
 const soldCounter = document.getElementById('soldCounter');
 const saveBtn = document.getElementById('saveBtn');
 

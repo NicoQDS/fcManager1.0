@@ -141,6 +141,7 @@ body {
   table-layout: fixed;
   width: 100%;
   max-width: 100%;
+  font-size: 0.8rem; /* same as .roster-name */
 }
 
 #playerListTableWrap thead th:nth-child(1) { width: auto; }
@@ -230,6 +231,118 @@ th.sortable[data-dir='asc'] .sort-caret::after {
 th.sortable[data-dir='desc'] .sort-caret::after {
   content: '\2193'; /* ↓ */
   color: var(--fcm-orange);
+}
+
+/* Team roster — right of the sidebar, takes whatever the other columns leave.
+   Same padded-zone-plus-card shape as #playerListZone; empty for now. */
+#rosterZone {
+  flex: 1 1 auto;
+  display: flex;
+  min-width: 0;
+  padding: 0.75rem;
+  padding-left: 0rem; /* no gutter between the two columns */
+}
+
+#rosterPanel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* One row of cards, scrolled sideways; each card scrolls its own list. */
+#rosterGrid {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.roster-card {
+  --card-accent: var(--fcm-orange);
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.roster-card.mine {
+  --card-accent: var(--fcm-mine);
+  border-color: var(--card-accent);
+}
+
+.roster-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.roster-team {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-totals {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--card-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.roster-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.35rem 0 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.roster-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding: 0.1rem 0;
+}
+
+.roster-roles {
+  flex: 0 0 auto;
+}
+
+/* Name takes the slack; a long one clips instead of pushing the price out. */
+.roster-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-price {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.roster-empty {
+  color: #6c757d;
 }
 
 /* Right column — same shape as #playerListZone: a padded zone holding one
@@ -350,8 +463,23 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   --card-accent: var(--fcm-mine);
 }
 
-.team-card:hover {
+.team-card:not(.out):hover {
   border-color: var(--card-accent);
+}
+
+/* Spent out or roster full: dimmed, no longer a pick. */
+.team-card.out {
+  cursor: default;
+  opacity: 0.65;
+}
+
+/* Nothing left to spend: the purse drops its accent colour. */
+.team-card.out .team-credits {
+  color: #6c757d;
+}
+
+.team-card.out .team-bar-fill {
+  background: #6c757d;
 }
 
 .team-card.active {
@@ -384,7 +512,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: black;
 }
 
-.team-card:hover .team-rank,
+.team-card:not(.out):hover .team-rank,
 .team-card.active .team-rank {
   border-color: var(--card-accent);
 }
@@ -651,9 +779,15 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   padding-bottom: 0;
 }
 
+/* fM suffix rides with the price box, same as #initialCredits-group. */
+#assignPrice-group {
+  flex: 0 0 auto;
+  width: auto;
+}
+
 /* No spinner: the price is typed, and the arrows ate a third of the box. */
 #assignPrice {
-  max-width: 75px;
+  max-width: 44px;
   appearance: textfield;
   -moz-appearance: textfield;
 }

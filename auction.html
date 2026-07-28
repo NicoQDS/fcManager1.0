@@ -50,13 +50,16 @@
                     <span class="selected-empty">No player selected</span>
                   </span>
                   <div class="action-controls">
-                    <input
-                      type="number"
-                      id="assignPrice"
-                      class="form-control form-control-sm"
-                      placeholder="price"
-                      min="1"
-                    />
+                    <div id="assignPrice-group" class="input-group input-group-sm">
+                      <input
+                        type="number"
+                        id="assignPrice"
+                        class="form-control form-control-sm"
+                        aria-label="Price"
+                        min="1"
+                      />
+                      <span class="input-group-text">fM</span>
+                    </div>
                     <!-- Bootstrap Icons check, inlined: the icon font isn't loaded. -->
                     <button
                       id="assignBtn"
@@ -197,6 +200,15 @@
             </ul>
           </div>
         </aside>
+
+        <!-- TEAM ROSTER — empty for now -->
+        <section id="rosterZone">
+          <div id="rosterPanel">
+            <div id="rosterGrid">
+              <!-- one card per team, filled by auction.js -->
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
