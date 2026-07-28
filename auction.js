@@ -39,18 +39,21 @@ function playerRow(p) {
   const sold = p.soldTo
     ? `<span class="badge text-bg-secondary">${esc(p.soldTo)} · ${esc(p.price)}</span>`
     : '';
+  // Hiding sold players empties the column, so drop it from the table entirely.
+  const soldCell = showSoldColumn() ? `<td class="text-center">${sold}</td>` : '';
   return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
     <td>${esc(p.name)}</td>
     <td>${esc(p.team)}</td>
     <td>${roleBadges(p)}</td>
     <td class="text-end">${esc(p.qt)}</td>
     <td class="text-end">${esc(p.fvm)}</td>
-    <td class="text-center">${sold}</td>
+    ${soldCell}
   </tr>`;
 }
 
 function emptyRow(message) {
-  return `<tr><td colspan="6" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
+  const cols = showSoldColumn() ? 6 : 5;
+  return `<tr><td colspan="${cols}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
 // Sortable columns: header element + comparator. Comparator gets the sort
@@ -107,8 +110,15 @@ function matchesRoles(p, roles) {
 }
 
 const hideSold = document.getElementById('hideSold');
+const soldHeader = document.getElementById('soldHeader');
+
+function showSoldColumn() {
+  return !hideSold.checked;
+}
 
 function render() {
+  soldHeader.hidden = !showSoldColumn();
+
   if (allPlayers.length === 0) {
     playerListBody.innerHTML = emptyRow('No players loaded.');
     return;
@@ -169,15 +179,22 @@ const assignTeam = document.getElementById('assignTeam');
 let teams = [];
 
 function makeTeams(names, credits) {
-  return (names || []).map((name) => ({ name, credits, roster: [] }));
+  // `initial` never moves — it is the 100% mark of the purse bar.
+  return (names || []).map((name) => ({ name, credits, initial: credits, roster: [] }));
 }
 
 function teamCard(team) {
   const active = team.name === assignTeam.value ? ' active' : '';
+  const initial = num(team.initial) || 0;
+  // Orange = credits left, black = credits spent.
+  const left = initial > 0 ? Math.max(0, Math.min(100, (num(team.credits) / initial) * 100)) : 0;
   return `<div class="team-card${active}" data-team="${esc(team.name)}">
     <div class="team-card-head">
-      <span class="team-name">${esc(team.name)}</span>
       <span class="team-credits">${esc(team.credits)} fM</span>
+      <span class="team-name">${esc(team.name)}</span>
+    </div>
+    <div class="team-bar" role="progressbar" aria-valuenow="${esc(team.credits)}" aria-valuemin="0" aria-valuemax="${esc(initial)}">
+      <div class="team-bar-fill" style="width: ${left.toFixed(1)}%"></div>
     </div>
   </div>`;
 }

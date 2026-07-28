@@ -42,7 +42,7 @@ body {
 
 /* Player list (left third) */
 #playerListZone {
-  flex: 0 0 33.333%;
+  flex: 0 0 36%;
   display: flex;
   min-width: 0;
   padding: 0.75rem;
@@ -124,6 +124,7 @@ body {
 #playerListTableWrap {
   flex: 1 1 auto;
   overflow-y: auto;
+  overflow-x: hidden; /* table always fits the panel — never scrolls sideways */
   padding: 0 0.75rem;
 }
 
@@ -134,13 +135,40 @@ body {
   z-index: 1;
 }
 
+/* Fixed layout: every column but Name is pinned, so a wider window hands all
+   the extra space to Name (the only auto-width column). */
+#playerListTableWrap table {
+  table-layout: fixed;
+  width: 100%;
+  max-width: 100%;
+}
+
+#playerListTableWrap thead th:nth-child(1) { width: auto; }
+#playerListTableWrap thead th:nth-child(2) { width: auto; }  /* Team */
+#playerListTableWrap thead th:nth-child(3) { width: 6rem; } /* Roles */
+#playerListTableWrap thead th:nth-child(4) { width: 3rem; } /* Qt */
+#playerListTableWrap thead th:nth-child(5) { width: 3rem; } /* FVM */
+#playerListTableWrap thead th:nth-child(6) { width: 9.5rem; } /* Sold */
+
+/* Fixed columns can't grow for long values — clip instead of overflowing. */
+#playerListTableWrap tbody td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A player can carry several role badges: let that one cell wrap. */
+#playerListTableWrap tbody td:nth-child(3) {
+  white-space: normal;
+}
+
 .sold-row {
   opacity: 0.55;
 }
 
 /* Struck through everywhere but the Sold cell — its badge stays readable. */
 .sold-row > td:not(:last-child) {
-  text-decoration: line-through;
+  /* text-decoration: line-through; */
 }
 
 /* Role badges — one color per mantra role. */
@@ -236,6 +264,23 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 .team-credits {
   color: var(--fcm-orange);
   font-weight: 600;
+}
+
+/* Purse bar: orange = credits left, black track = credits spent. */
+.team-bar {
+  /* Whole pixels: a fractional height rounds differently per card and the bars
+     come out visibly uneven. */
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: #000;
+  overflow: hidden;
+}
+
+.team-bar-fill {
+  height: 100%;
+  background: var(--fcm-orange);
+  transition: width 0.2s ease;
 }
 
 
