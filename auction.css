@@ -224,16 +224,96 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: var(--fcm-orange);
 }
 
+/* Right column: teams on top, sales log pinned under them. */
+#teamsColumn {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+}
+
 /* Teams sidebar (scrolls independently) */
 #teamsZone {
-  flex: 0 0 260px;
+  flex: 1 1 auto;
   overflow-y: auto;
   padding: 0.75rem;
   background: #fff;
 }
 
+/* SALES LOG — dark strip under the teams, newest entry on top. */
+#auctionLog {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 40%;
+  min-height: 0;
+  background: #343a40;
+  color: #fff;
+}
+
+#auctionLogHead {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#auctionLogList {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.log-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+}
+
+.log-time {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Player name takes the slack; a long one clips instead of pushing the price. */
+.log-player {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.log-team {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.log-price {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+
+.log-empty {
+  color: rgba(255, 255, 255, 0.55);
+  padding: 0.15rem 0;
+}
+
 /* Cards double as team pickers for the assign controls. */
 .team-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
   padding: 0.6rem 0.75rem;
@@ -251,14 +331,46 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   box-shadow: inset 3px 0 0 var(--fcm-orange);
 }
 
-.team-card-head {
+/* Standings position — its own box echoing the card's border and radius. */
+.team-rank {
+  flex: 0 0 auto;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9rem;
+  padding: 0 0.35rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  color: black;
 }
 
+.team-card:hover .team-rank,
+.team-card.active .team-rank {
+  border-color: var(--fcm-orange);
+}
+
+.team-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.team-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+/* Credits stay left; name + player count travel together on the right. */
 .team-name {
   font-weight: 600;
+  margin-left: auto;
+}
+
+.team-count {
+  color: #758088;
+  font-weight: 400;
+  font-size: 100%;
 }
 
 .team-credits {

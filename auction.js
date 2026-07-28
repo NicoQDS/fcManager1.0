@@ -183,29 +183,72 @@ function makeTeams(names, credits) {
   return (names || []).map((name) => ({ name, credits, initial: credits, roster: [] }));
 }
 
-function teamCard(team) {
+function teamCard(team, rank) {
   const active = team.name === assignTeam.value ? ' active' : '';
   const initial = num(team.initial) || 0;
   // Orange = credits left, black = credits spent.
   const left = initial > 0 ? Math.max(0, Math.min(100, (num(team.credits) / initial) * 100)) : 0;
   return `<div class="team-card${active}" data-team="${esc(team.name)}">
-    <div class="team-card-head">
-      <span class="team-credits">${esc(team.credits)} fM</span>
-      <span class="team-name">${esc(team.name)}</span>
-    </div>
-    <div class="team-bar" role="progressbar" aria-valuenow="${esc(team.credits)}" aria-valuemin="0" aria-valuemax="${esc(initial)}">
-      <div class="team-bar-fill" style="width: ${left.toFixed(1)}%"></div>
+    <div class="team-rank">${esc(rank)}</div>
+    <div class="team-card-body">
+      <div class="team-card-head">
+        <span class="team-credits">${esc(team.credits)} fM</span>
+        <span class="team-name">${esc(team.name)}</span>
+        <span class="team-count">${esc(team.roster.length)}</span>
+      </div>
+      <div class="team-bar" role="progressbar" aria-valuenow="${esc(team.credits)}" aria-valuemin="0" aria-valuemax="${esc(initial)}">
+        <div class="team-bar-fill" style="width: ${left.toFixed(1)}%"></div>
+      </div>
     </div>
   </div>`;
 }
 
-// Richest team on top; equal purses keep a stable order by name.
+// Richest team on top; equal purses keep a stable order by name. That order is
+// the standings, so the card's position is its rank.
 function renderTeams() {
   const ordered = [...teams].sort((a, b) => b.credits - a.credits || byName(a, b));
   teamsZone.innerHTML =
     ordered.length === 0
       ? '<p class="text-muted">No teams in this auction.</p>'
-      : ordered.map(teamCard).join('');
+      : ordered.map((t, i) => teamCard(t, i + 1)).join('');
+}
+
+// --- Sales log: one line per assignment, stored in the auction file ---
+const auctionLogList = document.getElementById('auctionLogList');
+
+function logTime(at) {
+  const d = new Date(at);
+  return Number.isNaN(d.getTime())
+    ? '--:--'
+    : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function logEntryRow(entry) {
+  return `<li class="log-entry">
+    <span class="log-time">${esc(logTime(entry.at))}</span>
+    <span class="log-player">${esc(entry.player)}</span>
+    <span class="log-team">${esc(entry.team)}</span>
+    <span class="log-price">${esc(entry.price)} fM</span>
+  </li>`;
+}
+
+// Newest first, so the last sale is always the visible one.
+function renderLog() {
+  const entries = (auction && auction.log) || [];
+  auctionLogList.innerHTML =
+    entries.length === 0
+      ? '<li class="log-empty">No sales yet.</li>'
+      : [...entries].reverse().map(logEntryRow).join('');
+}
+
+function addLogEntry(player, team, price) {
+  auction.log.push({
+    player: player.name,
+    team: team.name,
+    price,
+    at: new Date().toISOString(),
+  });
+  renderLog();
 }
 
 // Assign dropdown draws on the same team list; the placeholder stays first.
@@ -505,6 +548,8 @@ function assign() {
   team.roster.push(p);
   team.credits -= price;
 
+  addLogEntry(p, team, price);
+
   assignPrice.value = '';
   assignTeam.value = '';
   clearSelection();
@@ -540,8 +585,10 @@ const auction = loadAuction();
 
 if (!auction) {
   playerListBody.innerHTML = emptyRow('No auction loaded — go Home → Continue and pick a saved file.');
+  renderLog();
 } else {
   allPlayers = auction.players || [];
+  auction.log = auction.log || []; // older auction files have no log yet
   teams = makeTeams(auction.teams, auction.initialCredits);
   hydrateTeams(); // replay past assignments into credits and rosters
   showSelected(null);
@@ -551,5 +598,6 @@ if (!auction) {
   hideSold.checked = false; // browsers restore checkbox state on reload
   render();
   renderTeams();
+  renderLog();
   fillTeamSelect();
 }
