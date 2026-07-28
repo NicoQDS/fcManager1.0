@@ -224,30 +224,44 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: var(--fcm-orange);
 }
 
-/* Right column: teams on top, sales log pinned under them. */
+/* Right column — same shape as #playerListZone: a padded zone holding one
+   bound card, teams on top, sales log under them. */
 #teamsColumn {
   flex: 0 0 260px;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  background: #fff;
-}
-
-/* Teams sidebar (scrolls independently) */
-#teamsZone {
-  flex: 1 1 auto;
-  overflow-y: auto;
+  gap: 0.75rem;
+  min-width: 0;
   padding: 0.75rem;
-  background: #fff;
+  padding-left: 0rem;
+  overflow-y: auto; /* last resort: more team cards than the column is tall */
 }
 
-/* SALES LOG — dark strip under the teams, newest entry on top. */
-#auctionLog {
-  flex: 0 0 auto;
+#teamsPanel {
+  flex: 0 0 auto; /* every team card always fits — the panel never scrolls */
   display: flex;
   flex-direction: column;
-  max-height: 40%;
-  min-height: 0;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Teams sidebar */
+#teamsZone {
+  flex: 0 0 auto;
+  padding: 0.75rem;
+}
+
+/* SALES LOG — own card under the teams, newest entry on top. */
+#logPanel {
+  flex: 1 1 auto; /* eats every pixel the team cards leave, empty or not */
+  display: flex;
+  flex-direction: column;
+  min-height: 6rem;
+  border-radius: 0.5rem;
+  overflow: hidden; /* keeps the scrolling list inside the rounded corners */
   background: #343a40;
   color: #fff;
 }
