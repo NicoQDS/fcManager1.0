@@ -129,8 +129,7 @@ body {
   background: var(--fcm-orange);
 }
 
-#newAuctionForm,
-#playersUploadSection {
+#newAuctionForm {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
@@ -156,6 +155,10 @@ body {
 
 .is-invalid-field {
   border-color: #f5a3a3;
+}
+
+#playersFile {
+  width: 100%;
 }
 
 #playersFile::file-selector-button {
