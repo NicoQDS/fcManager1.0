@@ -38,12 +38,15 @@ app.get('/api/auctions', (req, res) => {
     const id = f.slice(0, -'.json'.length);
     const stat = fs.statSync(path.join(AUCTIONS_DIR, f));
     let leagueName = id;
+    let ruleset = 'mantra';
     try {
-      leagueName = JSON.parse(fs.readFileSync(path.join(AUCTIONS_DIR, f), 'utf8')).leagueName || id;
+      const parsed = JSON.parse(fs.readFileSync(path.join(AUCTIONS_DIR, f), 'utf8'));
+      leagueName = parsed.leagueName || id;
+      ruleset = parsed.ruleset || 'mantra';
     } catch {
       // Unreadable/corrupt file — fall back to the id as the label.
     }
-    return { id, leagueName, modifiedAt: stat.mtime };
+    return { id, leagueName, ruleset, modifiedAt: stat.mtime };
   });
 
   list.sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));

@@ -1,0 +1,853 @@
+/* Auction page — full-height layout: sticky header, scrollable middle. */
+
+body {
+  background-color: #f8f9fa;
+  margin: 0;
+}
+
+#auctionLayout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* HEADER */
+#auctionHeader {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border-bottom: 1px solid #dee2e6;
+}
+
+#auctionLeague {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fcm-orange);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* MIDDLE */
+#auctionMain {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0; /* lets children scroll instead of overflowing */
+}
+
+/* Player list (left third) */
+#playerListZone {
+  flex: 0 0 36%;
+  display: flex;
+  min-width: 0;
+  padding: 0.75rem;
+}
+
+/* Bound card: controls + table are one unit, never visually unlink. */
+#playerPanel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+#playerListControls {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+#playerSearch {
+  width: 100%;
+}
+
+#roleFilterActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1rem; /* match "Hide sold" label */
+}
+
+#roleFilterActions .btn-link {
+  text-decoration: none;
+  color: var(--fcm-orange);
+  font-size: inherit;
+}
+
+/* Push "Hide sold" to the far right; blank space fills the middle. */
+#roleFilterActions #statusFilters {
+  margin-left: auto;
+  margin-bottom: 0;
+}
+
+/* Role toggle buttons — multi-select, wrap to fit the narrow column. */
+#roleFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+#roleFilter .btn {
+  min-width: 2.4rem;
+}
+
+/* Checked role button = that role's badge color. */
+#roleFilter .btn-check:checked + .btn {
+  color: #fff;
+}
+#role-Por:checked + .btn { background: var(--role-por); border-color: var(--role-por); }
+#role-Ds:checked  + .btn,
+#role-Dc:checked  + .btn,
+#role-Dd:checked  + .btn,
+#role-B:checked   + .btn { background: var(--role-def); border-color: var(--role-def); }
+#role-E:checked   + .btn,
+#role-M:checked   + .btn,
+#role-C:checked   + .btn { background: var(--role-mid); border-color: var(--role-mid); }
+#role-W:checked   + .btn,
+#role-T:checked   + .btn { background: var(--role-treq); border-color: var(--role-treq); }
+#role-A:checked   + .btn,
+#role-Pc:checked  + .btn { background: var(--role-att); border-color: var(--role-att); }
+
+#playerListTableWrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden; /* table always fits the panel — never scrolls sideways */
+  padding: 0 0.75rem;
+}
+
+#playerListTableWrap thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 1;
+}
+
+/* Fixed layout: every column but Name is pinned, so a wider window hands all
+   the extra space to Name (the only auto-width column). */
+#playerListTableWrap table {
+  table-layout: fixed;
+  width: 100%;
+  max-width: 100%;
+  font-size: 0.8rem; /* same as .roster-name */
+}
+
+#playerListTableWrap thead th:nth-child(1) { width: auto; }
+#playerListTableWrap thead th:nth-child(2) { width: auto; }  /* Team */
+#playerListTableWrap thead th:nth-child(3) { width: 6rem; } /* Roles */
+#playerListTableWrap thead th:nth-child(4) { width: 3rem; } /* Qt */
+#playerListTableWrap thead th:nth-child(5) { width: 3rem; } /* FVM */
+#playerListTableWrap thead th:nth-child(6) { width: 9.5rem; } /* Sold */
+
+/* Fixed columns can't grow for long values — clip instead of overflowing. */
+#playerListTableWrap tbody td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A player can carry several role badges: let that one cell wrap. */
+#playerListTableWrap tbody td:nth-child(3) {
+  white-space: normal;
+}
+
+.sold-row {
+  opacity: 0.55;
+}
+
+/* Struck through everywhere but the Sold cell — its badge stays readable. */
+.sold-row > td:not(:last-child) {
+  /* text-decoration: line-through; */
+}
+
+/* Role badges — one color per mantra role. */
+.role-badge {
+  display: inline-block;
+  padding: 0.1rem 0.35rem;
+  margin-right: 0.15rem;
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+}
+
+/* Sold badge for a player the user's own team bought. */
+.sold-mine {
+  background-color: var(--fcm-mine);
+  color: #fff;
+}
+
+/* Official mantra line colors (used by badges AND role filter buttons). */
+:root {
+  --fcm-mine: #12b5c4; /* accent for anything belonging to the user's team */
+
+  --role-por: #f5a623; /* portiere */
+  --role-def: #4caf50; /* linea difensiva */
+  --role-mid: #2196f3; /* linea di centrocampo */
+  --role-treq: #c724b1; /* linea di trequarti */
+  --role-att: #e53935; /* linea d'attacco */
+}
+
+.role-Por                        { background: var(--role-por); }
+.role-Ds, .role-Dc, .role-Dd, .role-B { background: var(--role-def); }
+.role-E, .role-M, .role-C        { background: var(--role-mid); }
+.role-W, .role-T                 { background: var(--role-treq); }
+.role-A, .role-Pc                { background: var(--role-att); }
+
+/* Sortable column header */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  color: var(--fcm-orange);
+}
+
+.sort-caret::after {
+  content: '\2195'; /* ↕ unsorted */
+  color: #adb5bd;
+  font-size: 0.8em;
+}
+
+th.sortable[data-dir='asc'] .sort-caret::after {
+  content: '\2191'; /* ↑ */
+  color: var(--fcm-orange);
+}
+
+th.sortable[data-dir='desc'] .sort-caret::after {
+  content: '\2193'; /* ↓ */
+  color: var(--fcm-orange);
+}
+
+/* Team roster — right of the sidebar, takes whatever the other columns leave.
+   Same padded-zone-plus-card shape as #playerListZone; empty for now. */
+#rosterZone {
+  flex: 1 1 auto;
+  display: flex;
+  min-width: 0;
+  padding: 0.75rem;
+  padding-left: 0rem; /* no gutter between the two columns */
+}
+
+#rosterPanel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* One row of cards, scrolled sideways; each card scrolls its own list. */
+#rosterGrid {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.roster-card {
+  --card-accent: var(--fcm-orange);
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.roster-card.mine {
+  --card-accent: var(--fcm-mine);
+  border-color: var(--card-accent);
+}
+
+.roster-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Sidebar's .team-star pushes itself right with margin-left: auto; cancel
+   that here so the star sits flush left next to the name. */
+.roster-head .team-star {
+  margin-left: 0;
+}
+
+.roster-team {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-totals {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--card-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.roster-action-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  color: #6c757d;
+}
+
+.roster-action-btn:hover {
+  background: #f1f3f5;
+}
+
+.roster-action-btn.active {
+  background: #fee2e2;
+  color: #dc3545;
+}
+
+.roster-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.35rem 0 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.roster-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  padding: 0.1rem 0;
+}
+
+.roster-roles {
+  flex: 0 0 auto;
+}
+
+/* Name takes the slack; a long one clips instead of pushing the price out. */
+.roster-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roster-price {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.roster-remove-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  color: #dc3545;
+}
+
+.roster-remove-btn:hover {
+  background: #fee2e2;
+}
+
+.roster-empty {
+  color: #6c757d;
+}
+
+/* Right column — same shape as #playerListZone: a padded zone holding one
+   bound card, teams on top, sales log under them. */
+#teamsColumn {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.75rem;
+  padding-left: 0rem;
+  overflow-y: auto; /* last resort: more team cards than the column is tall */
+}
+
+#teamsPanel {
+  flex: 0 0 auto; /* every team card always fits — the panel never scrolls */
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Teams sidebar */
+#teamsZone {
+  flex: 0 0 auto;
+  padding: 0.75rem;
+}
+
+/* SALES LOG — own card under the teams, newest entry on top. */
+#logPanel {
+  flex: 1 1 auto; /* eats every pixel the team cards leave, empty or not */
+  display: flex;
+  flex-direction: column;
+  min-height: 6rem;
+  border-radius: 0.5rem;
+  overflow: hidden; /* keeps the scrolling list inside the rounded corners */
+  background: #343a40;
+  color: #fff;
+}
+
+#auctionLogHead {
+  flex: 0 0 auto;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#auctionLogList {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.log-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+}
+
+.log-time {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Player name takes the slack; a long one clips instead of pushing the price. */
+.log-player {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.log-team {
+  flex: 0 0 auto;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.log-price {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+
+.log-empty {
+  color: rgba(255, 255, 255, 0.55);
+  padding: 0.15rem 0;
+}
+
+/* Cards double as team pickers for the assign controls. Every orange accent
+   inside a card comes from --card-accent, so one override recolours the card. */
+.team-card {
+  --card-accent: var(--fcm-orange);
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.6rem;
+  cursor: pointer;
+}
+
+/* The user's own team runs on its own colour. */
+.team-card.mine {
+  --card-accent: var(--fcm-mine);
+}
+
+.team-card:not(.out):hover {
+  border-color: var(--card-accent);
+}
+
+/* Spent out or roster full: dimmed, no longer a pick. */
+.team-card.out {
+  cursor: default;
+  opacity: 0.65;
+}
+
+/* Nothing left to spend: the purse drops its accent colour. */
+.team-card.out .team-credits {
+  color: #6c757d;
+}
+
+.team-card.out .team-bar-fill {
+  background: #6c757d;
+}
+
+.team-card.active {
+  border-color: var(--card-accent);
+  background: color-mix(in srgb, var(--card-accent) 12%, transparent);
+  box-shadow: inset 3px 0 0 var(--card-accent);
+}
+
+/* Star marks the user's own team; the empty slot keeps the other cards aligned. */
+.team-star {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  width: 14px;
+  margin-left: auto; /* star + name + count ride together on the right */
+  color: var(--card-accent);
+}
+
+/* Standings position — its own box echoing the card's border and radius. */
+.team-rank {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9rem;
+  padding: 0 0.35rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  color: black;
+}
+
+.team-card:not(.out):hover .team-rank,
+.team-card.active .team-rank {
+  border-color: var(--card-accent);
+}
+
+.team-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.team-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+/* Credits stay left; star + name + player count travel together on the right. */
+.team-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.team-count {
+  color: #758088;
+  font-weight: 400;
+  font-size: 100%;
+}
+
+.team-credits {
+  color: var(--card-accent);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Purse bar: orange = credits left, black track = credits spent. */
+.team-bar {
+  /* Whole pixels: a fractional height rounds differently per card and the bars
+     come out visibly uneven. */
+  height: 5px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: #000;
+  overflow: hidden;
+}
+
+.team-bar-fill {
+  height: 100%;
+  background: var(--card-accent);
+  transition: width 0.2s ease;
+}
+
+
+/* SELECTION SECTION — search + current pick + assign controls.
+   Rule below it splits selection from the role filter block. */
+#selectionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Current pick — a tinted strip so the chosen player reads as a state, not
+   as another line of text. Fixed height keeps the controls from jumping. */
+#selectedPlayer {
+  --pick: var(--fcm-orange); /* fallback: player with no role */
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.45rem;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.375rem;
+  border-left: 3px solid var(--pick);
+  background: color-mix(in srgb, var(--pick) 12%, transparent);
+}
+
+/* Strip colour follows the first role badge — same groups as .role-* above. */
+#selectedPlayer.pick-Por { --pick: var(--role-por); }
+#selectedPlayer.pick-Dd,
+#selectedPlayer.pick-Dc,
+#selectedPlayer.pick-Ds,
+#selectedPlayer.pick-B { --pick: var(--role-def); }
+#selectedPlayer.pick-E,
+#selectedPlayer.pick-M,
+#selectedPlayer.pick-C { --pick: var(--role-mid); }
+#selectedPlayer.pick-W,
+#selectedPlayer.pick-T { --pick: var(--role-treq); }
+#selectedPlayer.pick-A,
+#selectedPlayer.pick-Pc { --pick: var(--role-att); }
+
+#selectedPlayer.is-empty {
+  border-left-color: #ced4da;
+  background: #f8f9fa;
+}
+
+#selectedPlayer .selected-empty {
+  color: #adb5bd;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* Darkened role colour: the raw badge colours are too pale for small text. */
+#selectedPlayer .selected-name {
+  color: color-mix(in srgb, var(--pick) 82%, #000);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  font-size: 0.95rem;
+}
+
+#selectedPlayer .selected-team {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+/* Badges hug the right edge, clear of the name. */
+#selectedPlayer .selected-badges {
+  margin-left: auto;
+  display: flex;
+  gap: 0.2rem;
+  align-self: center;
+}
+
+#selectedPlayer .role-badge {
+  margin-right: 0;
+}
+
+/* Assign feedback — empty string collapses the line, so nothing jumps. */
+#assignMsg {
+  font-size: 0.85rem;
+  min-height: 1.2em;
+}
+
+#assignMsg.error {
+  color: #dc3545;
+}
+
+#assignMsg.ok {
+  color: #198754;
+}
+
+/* Type-ahead dropdown — floats over the table, anchored to the search box. */
+#searchWrap {
+  position: relative;
+}
+
+#searchResults {
+  position: absolute;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+#searchResults li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#searchResults li:hover,
+#searchResults li.active {
+  background: #f1f3f5;
+}
+
+#searchResults .hit-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Team sits between name and badges; badges hug the right edge. */
+#searchResults .hit-team {
+  color: #6c757d;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+#searchResults .hit-roles {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Sold hits: dimmed and struck, with the buying team spelled out. */
+#searchResults li.hit-is-sold .hit-name,
+#searchResults li.hit-is-sold .hit-team {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+#searchResults .hit-sold {
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+  background: #e9ecef;
+  color: #6c757d;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Rows are clickable: clicking one selects that player. */
+#playerListBody tr {
+  cursor: pointer;
+}
+
+/* Picked row — from the search box or from a click. Wins over table-hover.
+   Sold rows are dimmed, which would swallow the tint, so selection restores
+   full opacity and gets a left marker. */
+#playerListBody tr.selected-row {
+  opacity: 1;
+}
+
+#playerListBody tr.selected-row > td {
+  background-color: rgba(245, 166, 35, 0.18);
+}
+
+#playerListBody tr.selected-row > td:first-child {
+  box-shadow: inset 3px 0 0 var(--fcm-orange);
+}
+
+/* Current pick on the left, assign controls hard right on the same line. */
+#pickRow {
+  display: flex;
+  align-items: stretch; /* controls take the pick strip's height */
+  gap: 0.5rem;
+}
+
+#pickRow #selectedPlayer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#pickRow .action-controls {
+  flex: 0 0 auto;
+  align-items: stretch; /* price box and both buttons match the strip */
+}
+
+.action-controls {
+  display: flex;
+  flex-wrap: wrap; /* narrow column: controls wrap instead of overflowing */
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-controls .form-select,
+.action-controls .form-control {
+  width: auto;
+}
+
+/* Icon-only buttons: centre the glyph instead of sitting it on the text baseline. */
+#assignBtn,
+#resetBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* fM suffix rides with the price box, same as #initialCredits-group. */
+#assignPrice-group {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+/* No spinner: the price is typed, and the arrows ate a third of the box. */
+#assignPrice {
+  max-width: 44px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+#assignPrice::-webkit-outer-spin-button,
+#assignPrice::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}

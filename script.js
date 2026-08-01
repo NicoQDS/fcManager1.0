@@ -29,12 +29,18 @@ async function loadAuctionList() {
   }
 
   auctionList.innerHTML = auctions
-    .map(
-      (a) => `<li class="list-group-item list-group-item-action auction-list-item" role="button" data-id="${esc(a.id)}">
-        <span class="auction-list-name">${esc(a.leagueName)}</span>
+    .map((a) => {
+      const isClassic = a.ruleset === 'classic';
+      const badgeClass = isClassic ? 'ruleset-badge-classic' : 'ruleset-badge-mantra';
+      const badgeLetter = isClassic ? 'C' : 'M';
+      return `<li class="list-group-item list-group-item-action auction-list-item" role="button" data-id="${esc(a.id)}">
+        <span class="auction-list-name-group">
+          <span class="ruleset-badge ${badgeClass}" title="${isClassic ? 'Classic' : 'Mantra'}">${badgeLetter}</span>
+          <span class="auction-list-name">${esc(a.leagueName)}</span>
+        </span>
         <span class="auction-list-date">${esc(formatModified(a.modifiedAt))}</span>
-      </li>`
-    )
+      </li>`;
+    })
     .join('');
 }
 
@@ -51,7 +57,7 @@ auctionList.addEventListener('click', async (e) => {
     }
     const data = await res.json();
     sessionStorage.setItem('fcmAuction', JSON.stringify(data));
-    window.location.href = 'auction.html';
+    window.location.href = data.ruleset === 'classic' ? 'classic_auction.html' : 'mantra_auction.html';
   } catch (err) {
     alert('Could not load that auction.');
   }
@@ -65,16 +71,26 @@ const maxBuyable = document.getElementById('maxBuyable');
 const initialCredits = document.getElementById('initialCredits');
 const numTeams = document.getElementById('numTeams');
 const teamNamesBlock = document.getElementById('teamNamesBlock');
-const continueBtn = document.getElementById('continueBtn');
 const leagueName = document.getElementById('leagueName');
-const settingsFields = document.getElementById('settingsFields');
 const playersUploadSection = document.getElementById('playersUploadSection');
 const playersFile = document.getElementById('playersFile');
 const createAuctionBtn = document.getElementById('createAuctionBtn');
 const saveStatus = document.getElementById('saveStatus');
+const modeClassic = document.getElementById('modeClassic');
+const modeMantra = document.getElementById('modeMantra');
+const maxBuyableCol = document.getElementById('maxBuyableCol');
 
 // Players parsed from the last valid xlsx, ready to save.
 let parsedPlayers = null;
+
+// Max buyable only applies to Mantra — hidden and forced off under Classic.
+function updateModeVisibility() {
+  maxBuyableCol.classList.toggle('d-none', modeClassic.checked);
+  if (modeClassic.checked) {
+    enableMaxBuyable.checked = false;
+    updateMaxBuyableEnabled();
+  }
+}
 
 function updateMaxBuyableEnabled() {
   maxBuyable.disabled = !enableMaxBuyable.checked;
@@ -125,6 +141,8 @@ function validateForm() {
 }
 
 enableMaxBuyable.addEventListener('change', updateMaxBuyableEnabled);
+modeClassic.addEventListener('change', updateModeVisibility);
+modeMantra.addEventListener('change', updateModeVisibility);
 
 // Clamp on blur, not on every keystroke — otherwise typing "12" gets
 // overwritten to "2" the moment the lone "1" reads below min.
@@ -137,16 +155,6 @@ numTeams.addEventListener('blur', () => {
 });
 
 numTeams.addEventListener('input', syncTeamNameInputs);
-
-continueBtn.addEventListener('click', () => {
-  if (!validateForm()) {
-    return;
-  }
-
-  settingsFields.disabled = true;
-  continueBtn.disabled = true;
-  playersUploadSection.classList.remove('d-none');
-});
 
 // Turn the "Tutti" sheet into our player shape.
 function parsePlayers(sheet) {
@@ -199,6 +207,7 @@ function buildAuction() {
   );
   return {
     leagueName: leagueName.value.trim(),
+    ruleset: modeClassic.checked ? 'classic' : 'mantra',
     initialCredits: parseInt(initialCredits.value, 10),
     maxBuyableEnabled: enableMaxBuyable.checked,
     maxBuyable: parseInt(maxBuyable.value, 10),
@@ -209,7 +218,6 @@ function buildAuction() {
 }
 
 playersFile.addEventListener('change', async () => {
-  createAuctionBtn.classList.add('d-none');
   saveStatus.innerHTML = '';
   parsedPlayers = null;
 
@@ -233,10 +241,18 @@ playersFile.addEventListener('change', async () => {
   }
 
   saveStatus.innerHTML = `<div class="text-muted">${parsedPlayers.length} players loaded. Ready to create.</div>`;
-  createAuctionBtn.classList.remove('d-none');
 });
 
 createAuctionBtn.addEventListener('click', async () => {
+  if (!validateForm()) {
+    return;
+  }
+
+  if (!parsedPlayers) {
+    saveStatus.innerHTML = '<div class="alert alert-danger">Upload a players file first.</div>';
+    return;
+  }
+
   const auction = buildAuction();
 
   createAuctionBtn.disabled = true;
@@ -255,7 +271,7 @@ createAuctionBtn.addEventListener('click', async () => {
     // Straight into the auction — the id comes back from the server, so the
     // stored copy matches the file the auction page will save back to.
     sessionStorage.setItem('fcmAuction', JSON.stringify({ id: data.id, ...auction }));
-    window.location.href = 'auction.html';
+    window.location.href = auction.ruleset === 'classic' ? 'classic_auction.html' : 'mantra_auction.html';
   } catch (err) {
     saveStatus.innerHTML = `<div class="alert alert-danger">Could not save: ${err.message}</div>`;
     createAuctionBtn.disabled = false;
@@ -263,4 +279,5 @@ createAuctionBtn.addEventListener('click', async () => {
 });
 
 updateMaxBuyableEnabled();
+updateModeVisibility();
 syncTeamNameInputs();
