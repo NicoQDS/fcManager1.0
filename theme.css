@@ -7,6 +7,10 @@
   --fcm-orange-hover: #e08e00;
 }
 
+body {
+  font-family: 'Montserrat', sans-serif;
+}
+
 /* Checked checkboxes/switches use brand orange (white tick stays visible). */
 .form-check-input:checked {
   background-color: var(--fcm-orange);

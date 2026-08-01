@@ -24,7 +24,9 @@ body {
 
 #auctionLeague {
   font-size: 1.5rem;
+  font-weight: 700;
   margin: 0;
+  color: var(--fcm-orange);
 }
 
 .header-right {
@@ -291,6 +293,12 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   border-bottom: 1px solid #dee2e6;
 }
 
+/* Sidebar's .team-star pushes itself right with margin-left: auto; cancel
+   that here so the star sits flush left next to the name. */
+.roster-head .team-star {
+  margin-left: 0;
+}
+
 .roster-team {
   font-weight: 600;
   overflow: hidden;
@@ -304,6 +312,29 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: var(--card-accent);
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.roster-action-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  color: #6c757d;
+}
+
+.roster-action-btn:hover {
+  background: #f1f3f5;
+}
+
+.roster-action-btn.active {
+  background: #fee2e2;
+  color: #dc3545;
 }
 
 .roster-list {
@@ -339,6 +370,24 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   flex: 0 0 auto;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+}
+
+.roster-remove-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  color: #dc3545;
+}
+
+.roster-remove-btn:hover {
+  background: #fee2e2;
 }
 
 .roster-empty {
@@ -531,6 +580,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 /* Credits stay left; star + name + player count travel together on the right. */
 .team-name {
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
 .team-count {
@@ -542,6 +592,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 .team-credits {
   color: var(--card-accent);
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
 /* Purse bar: orange = credits left, black track = credits spent. */
@@ -609,6 +660,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 #selectedPlayer .selected-empty {
   color: #adb5bd;
   font-style: italic;
+  font-size: 0.9rem;
 }
 
 /* Darkened role colour: the raw badge colours are too pale for small text. */
@@ -617,6 +669,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   font-weight: 700;
   font-size: 1.05rem;
   line-height: 1.2;
+  font-size: 0.95rem;
 }
 
 #selectedPlayer .selected-team {

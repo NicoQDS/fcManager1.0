@@ -30,6 +30,42 @@ function safeName(name) {
   return name.replace(/[\/\\:*?"<>|]/g, '-').trim();
 }
 
+// GET /api/auctions — list saved auctions, newest edited first.
+app.get('/api/auctions', (req, res) => {
+  const files = fs.readdirSync(AUCTIONS_DIR).filter((f) => f.endsWith('.json'));
+
+  const list = files.map((f) => {
+    const id = f.slice(0, -'.json'.length);
+    const stat = fs.statSync(path.join(AUCTIONS_DIR, f));
+    let leagueName = id;
+    try {
+      leagueName = JSON.parse(fs.readFileSync(path.join(AUCTIONS_DIR, f), 'utf8')).leagueName || id;
+    } catch {
+      // Unreadable/corrupt file — fall back to the id as the label.
+    }
+    return { id, leagueName, modifiedAt: stat.mtime };
+  });
+
+  list.sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
+  res.json(list);
+});
+
+// GET /api/auctions/:id — fetch one saved auction's full contents.
+app.get('/api/auctions/:id', (req, res) => {
+  const id = req.params.id;
+
+  if (/[\/\\]/.test(id) || id.includes('..')) {
+    return res.status(400).json({ error: 'Bad auction id' });
+  }
+
+  const file = path.join(AUCTIONS_DIR, `${id}.json`);
+  if (!fs.existsSync(file)) {
+    return res.status(404).json({ error: 'No such auction' });
+  }
+
+  res.json(JSON.parse(fs.readFileSync(file, 'utf8')));
+});
+
 // POST /api/auctions — save a new auction, return its id (= filename without .json).
 app.post('/api/auctions', (req, res) => {
   const auction = req.body;

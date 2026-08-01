@@ -183,6 +183,9 @@ let teams = [];
 // Buying team for the next assignment — picked by clicking a card, '' if none.
 let pickedTeam = '';
 
+// Roster cards whose "remove" mode is on — shows a remove button per player.
+const removeModeTeams = new Set();
+
 function makeTeams(names, credits) {
   // `initial` never moves — it is the 100% mark of the purse bar.
   return (names || []).map((name) => ({ name, credits, initial: credits, roster: [] }));
@@ -191,6 +194,15 @@ function makeTeams(names, credits) {
 // Bootstrap Icons star-fill, inlined: the page doesn't load the icon font.
 const STAR_FILL = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
   <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.283.95l-3.523 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+</svg>`;
+
+// Font Awesome inbox-out icon, inlined: the page doesn't load the icon font.
+// Toggles "remove mode" on a roster card.
+const ROSTER_ACTION_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 640 640" aria-hidden="true"><path fill="#212529" d="M535.6 85.7C513.7 63.8 478.3 63.8 456.4 85.7L432 110.1L529.9 208L554.3 183.6C576.2 161.7 576.2 126.3 554.3 104.4L535.6 85.7zM236.4 305.7C230.3 311.8 225.6 319.3 222.9 327.6L193.3 416.4C190.4 425 192.7 434.5 199.1 441C205.5 447.5 215 449.7 223.7 446.8L312.5 417.2C320.7 414.5 328.2 409.8 334.4 403.7L496 241.9L398.1 144L236.4 305.7zM160 128C107 128 64 171 64 224L64 480C64 533 107 576 160 576L416 576C469 576 512 533 512 480L512 384C512 366.3 497.7 352 480 352C462.3 352 448 366.3 448 384L448 480C448 497.7 433.7 512 416 512L160 512C142.3 512 128 497.7 128 480L128 224C128 206.3 142.3 192 160 192L256 192C273.7 192 288 177.7 288 160C288 142.3 273.7 128 256 128L160 128z"/></svg>`;
+
+// Bootstrap Icons x-lg, inlined: removes one player from a roster.
+const ROSTER_REMOVE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+  <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854z"/>
 </svg>`;
 
 // A team is out of the auction once it can't buy anyone else: no credits for
@@ -256,11 +268,17 @@ function roleRank(p) {
   return i === -1 ? ROLE_ORDER.length : i; // unknown or role-less players last
 }
 
-function rosterLine(p) {
+function rosterLine(p, removable) {
+  const remove = removable
+    ? `<button type="button" class="roster-remove-btn" data-id="${esc(p.id)}" title="Remove" aria-label="Remove ${esc(p.name)}">
+        ${ROSTER_REMOVE_ICON}
+      </button>`
+    : '';
   return `<li class="roster-line">
     <span class="roster-roles">${roleBadges(p)}</span>
     <span class="roster-name">${esc(p.name)}</span>
     <span class="roster-price">${esc(p.price)}</span>
+    ${remove}
   </li>`;
 }
 
@@ -269,18 +287,22 @@ function rosterCard(team) {
   const star = mine ? `<span class="team-star" title="Your team">${STAR_FILL}</span>` : '';
   const spent = team.roster.reduce((sum, p) => sum + num(p.price), 0);
   const players = [...team.roster].sort((a, b) => roleRank(a) - roleRank(b) || byName(a, b));
+  const removing = removeModeTeams.has(team.name);
 
-  return `<div class="roster-card${mine}">
+  return `<div class="roster-card${mine}" data-team="${esc(team.name)}">
     <div class="roster-head">
       ${star}
       <span class="roster-team">${esc(team.name)}</span>
       <span class="roster-totals">${team.roster.length} · ${spent} fM</span>
+      <button type="button" class="roster-action-btn${removing ? ' active' : ''}" title="Remove players" aria-label="Remove players">
+        ${ROSTER_ACTION_ICON}
+      </button>
     </div>
     <ul class="roster-list">
       ${
         players.length === 0
           ? '<li class="roster-empty">No players yet.</li>'
-          : players.map(rosterLine).join('')
+          : players.map((p) => rosterLine(p, removing)).join('')
       }
     </ul>
   </div>`;
@@ -299,6 +321,44 @@ function renderRosters() {
       ? '<p class="text-muted">No teams in this auction.</p>'
       : ordered.map(rosterCard).join('');
 }
+
+// Sends a player back to the pool: clears the sale and refunds the team.
+function unassignPlayer(id) {
+  const p = playerById(id);
+  if (!p || !p.soldTo) {
+    return;
+  }
+  const team = teamByName(p.soldTo);
+  if (team) {
+    team.roster = team.roster.filter((x) => x !== p);
+    team.credits += num(p.price);
+  }
+  p.soldTo = null;
+  p.price = null;
+
+  render();
+  renderTeams();
+  persist();
+}
+
+rosterGrid.addEventListener('click', (e) => {
+  const removeBtn = e.target.closest('.roster-remove-btn');
+  if (removeBtn) {
+    unassignPlayer(removeBtn.dataset.id);
+    return;
+  }
+
+  const actionBtn = e.target.closest('.roster-action-btn');
+  if (actionBtn) {
+    const teamName = actionBtn.closest('.roster-card').dataset.team;
+    if (removeModeTeams.has(teamName)) {
+      removeModeTeams.delete(teamName);
+    } else {
+      removeModeTeams.add(teamName);
+    }
+    renderRosters();
+  }
+});
 
 // --- Sales log: one line per assignment, stored in the auction file ---
 const auctionLogList = document.getElementById('auctionLogList');
@@ -540,9 +600,6 @@ const assignMsg = document.getElementById('assignMsg');
 assignPrice.addEventListener('click', () => {
   assignPrice.value = '';
 });
-const soldCounter = document.getElementById('soldCounter');
-const saveBtn = document.getElementById('saveBtn');
-
 function message(text, kind = 'error') {
   assignMsg.textContent = text;
   assignMsg.className = text ? kind : '';
@@ -554,11 +611,6 @@ function teamByName(name) {
 
 function playerById(id) {
   return allPlayers.find((p) => String(p.id) === String(id));
-}
-
-function updateSoldCounter() {
-  const sold = allPlayers.filter((p) => p.soldTo).length;
-  soldCounter.textContent = `sold ${sold} / ${allPlayers.length}`;
 }
 
 // Credits and rosters are not stored: they are replayed from the players'
@@ -642,7 +694,6 @@ function assign() {
   pickedTeam = '';
   clearSelection();
   renderTeams();
-  updateSoldCounter();
   message(`${p.name} to ${team.name} for ${price} fM.`, 'ok');
   persist();
 }
@@ -661,13 +712,6 @@ document.addEventListener('keydown', (e) => {
     assign();
   }
 });
-saveBtn.addEventListener('click', async () => {
-  message('Saving…', 'ok');
-  if (await persist()) {
-    message('Saved.', 'ok');
-  }
-});
-
 // --- Boot ---
 const auction = loadAuction();
 
@@ -681,7 +725,6 @@ if (!auction) {
   hydrateTeams(); // replay past assignments into credits and rosters
   showSelected(null);
   document.getElementById('auctionLeague').textContent = auction.leagueName;
-  updateSoldCounter();
   setAllRoles(true); // start unfiltered
   hideSold.checked = false; // browsers restore checkbox state on reload
   render();

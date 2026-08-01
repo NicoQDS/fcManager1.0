@@ -14,22 +14,19 @@ body {
 
 #homeTitle {
   margin-bottom: 3rem;
-}
-
-#homeSubtitle {
-  font-size:  clamp(0.6rem, 1rem + 1.5vw, 1.5rem);
-  color: #6c757d;
+  margin-bottom: 20px;
 }
 
 #homeCards {
   --bs-gutter-x: 1.5rem;
   --bs-gutter-y: 1.5rem;
   justify-content: center;
+  align-items: flex-start; /* the new-auction form makes its card tall; the
+                               continue card next to it stays its own height */
   width: 100%;
 }
 
 #homeCards .card {
-  height: 100%;
   text-align: center;
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
@@ -61,4 +58,122 @@ body {
 .version {
   padding-top: 1.5rem;
   color: #8e9194;
+}
+
+#auctionList {
+  overflow-y: auto;
+  max-height: 160px;
+}
+
+.auction-list-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.auction-list-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auction-list-date {
+  flex: 0 0 auto;
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+/* New-auction form, embedded in the "Set Up New Auction" card. */
+#creditsPlayersRow {
+  margin-bottom: 1.5rem;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+#creditsPlayersRow .col-auto {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+#maxBuyable {
+  max-width: 100px;
+  font-size: 0.9rem;
+}
+
+#maxBuyableBlock {
+  padding-left: 1.25em;
+}
+
+#maxBuyableBlock #enableMaxBuyable {
+  margin-left: -1.25em;
+}
+
+.form-check-label {
+  padding: 0rem 0.5rem 0rem 0.5rem;
+}
+
+/* Classic/Mantra segmented control — fills the row, each side takes half. */
+#modeToggle {
+  width: 100%;
+}
+
+#modeToggle .btn {
+  flex: 1 1 0;
+  border-color: var(--bs-border-color);
+}
+
+#modeToggle .btn-check:checked + .btn {
+  color: #fff;
+  background: var(--fcm-orange);
+}
+
+#newAuctionForm,
+#playersUploadSection {
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#initialCredits-group {
+  max-width: 180px;
+}
+
+#initialCredits {
+  max-width: 90px;
+}
+
+#numTeams {
+  max-width: 120px;
+}
+
+#teamNamesBlock {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.75rem;
+}
+
+.is-invalid-field {
+  border-color: #f5a3a3;
+}
+
+#playersFile::file-selector-button {
+  background-color: var(--fcm-orange);
+  color: white;
+}
+
+/* First team slot is the user's own team — orange border marks it out. */
+.user-team {
+  border-color: var(--fcm-orange);
+}
+
+.user-team:focus {
+  border-color: var(--fcm-orange);
+  box-shadow: 0 0 0 0.25rem rgba(245, 166, 35, 0.25);
+}
+
+/* Empty-field warning still wins over the orange marker. */
+.user-team.is-invalid-field {
+  border-color: #f5a3a3;
 }
