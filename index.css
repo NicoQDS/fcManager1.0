@@ -159,6 +159,11 @@ body {
   background: var(--fcm-orange);
 }
 
+#modeClassic:checked + #modeClassicLabel {
+  background: #000;
+  border-color: #000;
+}
+
 #newAuctionForm {
   max-width: 600px;
   margin-left: auto;
@@ -201,14 +206,26 @@ body {
   color: white;
 }
 
+body.mode-classic #playersFile::file-selector-button {
+  background-color: #000;
+}
+
 /* First team slot is the user's own team — orange border marks it out. */
 .user-team {
   border-color: var(--fcm-orange);
+  border-width: 2px;
+  font-weight: 600;
+  color: var(--fcm-orange);
+}
+
+.user-team::placeholder {
+  color: var(--fcm-orange);
 }
 
 .user-team:focus {
   border-color: var(--fcm-orange);
   box-shadow: 0 0 0 0.25rem rgba(245, 166, 35, 0.25);
+  color: var(--fcm-orange);
 }
 
 /* Empty-field warning still wins over the orange marker. */
@@ -220,4 +237,9 @@ body {
 #createAuctionBtn {
   background-color: #000;
   border-color: #000;
+}
+
+body.mode-classic #createAuctionBtn {
+  background-color: var(--fcm-orange);
+  border-color: var(--fcm-orange);
 }

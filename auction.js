@@ -329,9 +329,11 @@ function unassignPlayer(id) {
     return;
   }
   const team = teamByName(p.soldTo);
+  const price = p.price;
   if (team) {
     team.roster = team.roster.filter((x) => x !== p);
     team.credits += num(p.price);
+    addLogEntry(p, team, price, true);
   }
   p.soldTo = null;
   p.price = null;
@@ -360,6 +362,15 @@ rosterGrid.addEventListener('click', (e) => {
   }
 });
 
+// A plain mouse wheel only reports vertical delta — redirect it sideways.
+rosterGrid.addEventListener('wheel', (e) => {
+  if (e.deltaY === 0) {
+    return;
+  }
+  e.preventDefault();
+  rosterGrid.scrollLeft += e.deltaY;
+});
+
 // --- Sales log: one line per assignment, stored in the auction file ---
 const auctionLogList = document.getElementById('auctionLogList');
 
@@ -371,7 +382,8 @@ function logTime(at) {
 }
 
 function logEntryRow(entry) {
-  return `<li class="log-entry">
+  const removedClass = entry.removed ? ' log-entry-removed' : '';
+  return `<li class="log-entry${removedClass}">
     <span class="log-time">${esc(logTime(entry.at))}</span>
     <span class="log-player">${esc(entry.player)}</span>
     <span class="log-team">${esc(entry.team)}</span>
@@ -388,12 +400,13 @@ function renderLog() {
       : [...entries].reverse().map(logEntryRow).join('');
 }
 
-function addLogEntry(player, team, price) {
+function addLogEntry(player, team, price, removed = false) {
   auction.log.push({
     player: player.name,
     team: team.name,
     price,
     at: new Date().toISOString(),
+    removed,
   });
   renderLog();
 }

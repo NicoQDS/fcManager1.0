@@ -57,7 +57,7 @@ auctionList.addEventListener('click', async (e) => {
     }
     const data = await res.json();
     sessionStorage.setItem('fcmAuction', JSON.stringify(data));
-    window.location.href = data.ruleset === 'classic' ? 'classic_auction.html' : 'mantra_auction.html';
+    window.location.href = data.ruleset === 'classic' ? 'coming_soon.html' : 'auction.html';
   } catch (err) {
     alert('Could not load that auction.');
   }
@@ -86,6 +86,7 @@ let parsedPlayers = null;
 // Max buyable only applies to Mantra — hidden and forced off under Classic.
 function updateModeVisibility() {
   maxBuyableCol.classList.toggle('d-none', modeClassic.checked);
+  document.body.classList.toggle('mode-classic', modeClassic.checked);
   if (modeClassic.checked) {
     enableMaxBuyable.checked = false;
     updateMaxBuyableEnabled();
@@ -271,7 +272,7 @@ createAuctionBtn.addEventListener('click', async () => {
     // Straight into the auction — the id comes back from the server, so the
     // stored copy matches the file the auction page will save back to.
     sessionStorage.setItem('fcmAuction', JSON.stringify({ id: data.id, ...auction }));
-    window.location.href = auction.ruleset === 'classic' ? 'classic_auction.html' : 'mantra_auction.html';
+    window.location.href = auction.ruleset === 'classic' ? 'coming_soon.html' : 'auction.html';
   } catch (err) {
     saveStatus.innerHTML = `<div class="alert alert-danger">Could not save: ${err.message}</div>`;
     createAuctionBtn.disabled = false;
