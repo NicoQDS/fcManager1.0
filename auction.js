@@ -42,21 +42,18 @@ function playerRow(p) {
   const sold = p.soldTo
     ? `<span class="${badge}">${esc(p.soldTo)} · ${esc(p.price)}</span>`
     : '';
-  // Hiding sold players empties the column, so drop it from the table entirely.
-  const soldCell = showSoldColumn() ? `<td class="text-center">${sold}</td>` : '';
   return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
+    <td>${roleBadges(p)}</td>
     <td>${esc(p.name)}</td>
     <td>${esc(p.team)}</td>
-    <td>${roleBadges(p)}</td>
     <td class="text-end">${esc(p.qt)}</td>
     <td class="text-end">${esc(p.fvm)}</td>
-    ${soldCell}
+    <td class="text-center">${sold}</td>
   </tr>`;
 }
 
 function emptyRow(message) {
-  const cols = showSoldColumn() ? 6 : 5;
-  return `<tr><td colspan="${cols}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
+  return `<tr><td colspan="6" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
 // Sortable columns: header element + comparator. Comparator gets the sort
@@ -113,15 +110,8 @@ function matchesRoles(p, roles) {
 }
 
 const hideSold = document.getElementById('hideSold');
-const soldHeader = document.getElementById('soldHeader');
-
-function showSoldColumn() {
-  return !hideSold.checked;
-}
 
 function render() {
-  soldHeader.hidden = !showSoldColumn();
-
   if (allPlayers.length === 0) {
     playerListBody.innerHTML = emptyRow('No players loaded.');
     return;

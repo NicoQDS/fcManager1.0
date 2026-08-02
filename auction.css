@@ -70,9 +70,8 @@ body {
 
 /* Player list (left third) */
 #playerListZone {
-  flex: 0 0 36%;
+  flex: 0 1 auto;
   display: flex;
-  min-width: 0;
   padding: 0.75rem;
 }
 
@@ -82,7 +81,6 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  min-width: 0;
   background: #fff;
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
@@ -125,11 +123,14 @@ body {
 #roleFilter {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
 #roleFilter .btn {
-  min-width: 2.4rem;
+  min-width: 1.6rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 /* Checked role button = that role's badge color. */
@@ -152,7 +153,8 @@ body {
 #playerListTableWrap {
   flex: 1 1 auto;
   overflow-y: auto;
-  overflow-x: hidden; /* table always fits the panel — never scrolls sideways */
+  overflow-x: auto; /* only kicks in if the viewport is narrower than the table's min size */
+  min-width: max-content; /* floor: never shrink past the table's own content width */
   padding: 0 0.75rem;
 }
 
@@ -163,32 +165,21 @@ body {
   z-index: 1;
 }
 
-/* Fixed layout: every column but Name is pinned, so a wider window hands all
-   the extra space to Name (the only auto-width column). */
+/* Auto layout: every column shrinks to its content's width; only Sold (the
+   one column with no width pin below) is left to soak up the leftover space. */
 #playerListTableWrap table {
-  table-layout: fixed;
-  width: 100%;
-  max-width: 100%;
+  table-layout: auto;
+  width: auto;
   font-size: 0.8rem; /* same as .roster-name */
 }
 
-#playerListTableWrap thead th:nth-child(1) { width: auto; }
-#playerListTableWrap thead th:nth-child(2) { width: auto; }  /* Team */
-#playerListTableWrap thead th:nth-child(3) { width: 6rem; } /* Roles */
-#playerListTableWrap thead th:nth-child(4) { width: 3rem; } /* Qt */
-#playerListTableWrap thead th:nth-child(5) { width: 3rem; } /* FVM */
-#playerListTableWrap thead th:nth-child(6) { width: 9.5rem; } /* Sold */
-
-/* Fixed columns can't grow for long values — clip instead of overflowing. */
-#playerListTableWrap tbody td {
-  overflow: hidden;
-  text-overflow: ellipsis;
+#playerListTableWrap thead th {
+  width: 1%;
   white-space: nowrap;
 }
 
-/* A player can carry several role badges: let that one cell wrap. */
-#playerListTableWrap tbody td:nth-child(3) {
-  white-space: normal;
+#playerListTableWrap tbody td {
+  white-space: nowrap;
 }
 
 .sold-row {
