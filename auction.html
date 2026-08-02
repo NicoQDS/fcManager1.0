@@ -26,7 +26,10 @@
     <div id="auctionLayout">
       <!-- HEADER -->
       <header id="auctionHeader">
-        <h1 id="auctionLeague">League name</h1>
+        <div class="header-left">
+          <h1 id="auctionLeague">League name</h1>
+          <span id="rulesetBadge" class="ruleset-badge"></span>
+        </div>
         <div class="header-right"></div>
       </header>
 
@@ -342,6 +345,9 @@
         <!-- TEAM ROSTER — empty for now -->
         <section id="rosterZone">
           <div id="rosterPanel">
+            <div id="myRosterSlot" hidden>
+              <!-- your own roster, pinned outside rosterGrid's scroll -->
+            </div>
             <div id="rosterGrid">
               <!-- one card per team, filled by auction.js -->
             </div>

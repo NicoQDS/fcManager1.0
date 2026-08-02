@@ -256,6 +256,8 @@ function renderTeams() {
 }
 
 // --- Rosters: one card per team, listing the players it bought ---
+const rosterPanel = document.getElementById('rosterPanel');
+const myRosterSlot = document.getElementById('myRosterSlot');
 const rosterGrid = document.getElementById('rosterGrid');
 
 // Same order as the role filter buttons: goalkeeper, defence, midfield,
@@ -308,18 +310,21 @@ function rosterCard(team) {
   </div>`;
 }
 
-// The user's own team leads; everyone else follows alphabetically.
+// The user's own team is pinned in myRosterSlot, outside rosterGrid's
+// horizontal scroll, so it never scrolls out of view; everyone else sits
+// in rosterGrid, alphabetically.
 function renderRosters() {
   const mineName = (auction && auction.userTeam) || '';
-  const ordered = [...teams].sort((a, b) => {
-    if (a.name === mineName) return -1;
-    if (b.name === mineName) return 1;
-    return byName(a, b);
-  });
+  const mine = teams.find((t) => t.name === mineName);
+  const others = teams.filter((t) => t.name !== mineName).sort(byName);
+
+  myRosterSlot.innerHTML = mine ? rosterCard(mine) : '';
+  myRosterSlot.hidden = !mine;
+
   rosterGrid.innerHTML =
-    ordered.length === 0
+    teams.length === 0
       ? '<p class="text-muted">No teams in this auction.</p>'
-      : ordered.map(rosterCard).join('');
+      : others.map(rosterCard).join('');
 }
 
 // Sends a player back to the pool: clears the sale and refunds the team.
@@ -343,7 +348,7 @@ function unassignPlayer(id) {
   persist();
 }
 
-rosterGrid.addEventListener('click', (e) => {
+rosterPanel.addEventListener('click', (e) => {
   const removeBtn = e.target.closest('.roster-remove-btn');
   if (removeBtn) {
     unassignPlayer(removeBtn.dataset.id);
@@ -363,13 +368,38 @@ rosterGrid.addEventListener('click', (e) => {
 });
 
 // A plain mouse wheel only reports vertical delta — redirect it sideways.
+// CSS scroll-snap doesn't reliably re-align a scrollLeft set by script (it's
+// inconsistent across browsers for non-native scrolls), so once the wheel
+// goes quiet we snap to the nearest card ourselves — otherwise a card can be
+// left half-scrolled, its clipped edge sitting flush against myRosterSlot.
+let rosterSnapTimer = null;
 rosterGrid.addEventListener('wheel', (e) => {
   if (e.deltaY === 0) {
     return;
   }
   e.preventDefault();
   rosterGrid.scrollLeft += e.deltaY;
+
+  clearTimeout(rosterSnapTimer);
+  rosterSnapTimer = setTimeout(snapRosterGrid, 120);
 });
+
+function snapRosterGrid() {
+  const gridLeft = rosterGrid.getBoundingClientRect().left;
+  let target = null;
+  let closestDist = Infinity;
+  rosterGrid.querySelectorAll('.roster-card').forEach((card) => {
+    const cardLeft = card.getBoundingClientRect().left - gridLeft + rosterGrid.scrollLeft;
+    const dist = Math.abs(cardLeft - rosterGrid.scrollLeft);
+    if (dist < closestDist) {
+      closestDist = dist;
+      target = cardLeft;
+    }
+  });
+  if (target !== null) {
+    rosterGrid.scrollTo({ left: target, behavior: 'smooth' });
+  }
+}
 
 // --- Sales log: one line per assignment, stored in the auction file ---
 const auctionLogList = document.getElementById('auctionLogList');
@@ -738,6 +768,10 @@ if (!auction) {
   hydrateTeams(); // replay past assignments into credits and rosters
   showSelected(null);
   document.getElementById('auctionLeague').textContent = auction.leagueName;
+  const isClassic = auction.ruleset === 'classic';
+  const rulesetBadge = document.getElementById('rulesetBadge');
+  rulesetBadge.textContent = isClassic ? 'classic' : 'mantra';
+  rulesetBadge.classList.add(isClassic ? 'ruleset-badge-classic' : 'ruleset-badge-mantra');
   setAllRoles(true); // start unfiltered
   hideSold.checked = false; // browsers restore checkbox state on reload
   render();
