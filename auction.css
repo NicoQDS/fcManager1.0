@@ -262,19 +262,22 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 /* Team roster — right of the sidebar, takes whatever the other columns leave.
-   Same padded-zone-plus-card shape as #playerListZone; empty for now. */
+   Empty for now. */
 #rosterZone {
   flex: 1 1 auto;
   display: flex;
+  gap: 0.75rem;
   min-width: 0;
   padding: 0.75rem;
   padding-left: 0rem; /* no gutter between the two columns */
 }
 
-#rosterPanel {
-  flex: 1 1 auto;
+#mineRosterPanel {
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
   display: flex;
-  min-height: 0;
+  flex-direction: column;
   min-width: 0;
   background: #fff;
   border: 1px solid #dee2e6;
@@ -282,144 +285,122 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   overflow: hidden;
 }
 
-/* Your own roster, pinned outside rosterGrid's scroll so it's always
-   visible no matter how far the grid is scrolled sideways. Width is set
-   explicitly (card's 200px + this element's own padding/border) rather than
-   left to "auto": Firefox under-computes the auto content size of a flex
-   container whose child is itself a flex container, letting the card
-   overflow past this box into rosterGrid. */
-#myRosterSlot {
-  flex: 0 0 225px;
-  display: flex;
-  align-items: stretch;
-  padding: 0.75rem;
-  border-right: 1px solid #dee2e6;
-}
-
-#myRosterSlot[hidden] {
-  display: none;
-}
-
-/* One row of cards, scrolled sideways; each card scrolls its own list.
-   Snapping (done in JS — see snapRosterGrid) means a scroll always lands on
-   a full card, never a sliver of one sitting flush against myRosterSlot. */
-#rosterGrid {
+#rosterPanel {
   flex: 1 1 auto;
   display: flex;
   align-items: stretch;
   gap: 0.75rem;
+  min-width: 0;
   padding: 0.75rem;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-.roster-card {
-  --card-accent: var(--fcm-orange);
-  flex: 0 0 200px;
+#mineRosterInner {
+  flex: 1 1 auto;
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  border: 1px solid #dee2e6;
+  min-width: 0;
+  background: transparent;
+  border: 1px solid #12b5c4;
   border-radius: 0.5rem;
-  padding: 0.5rem 0.6rem;
+  overflow: hidden;
+  margin: 0.75rem;
 }
 
-.roster-card.mine {
-  --card-accent: var(--fcm-mine);
-  border-color: var(--card-accent);
-}
-
-.roster-head {
+#mineRosterName {
   flex: 0 0 auto;
   display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid #dee2e6;
-}
-
-/* Sidebar's .team-star pushes itself right with margin-left: auto; cancel
-   that here so the star sits flush left next to the name. */
-.roster-head .team-star {
-  margin-left: 0;
-}
-
-.roster-team {
+  align-items: center;
+  padding: 0.5rem 0.6rem;
+  color: #12b5c4;
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: left;
+  font-size: 1.2rem;
 }
 
-.roster-totals {
+#mineRosterStats {
+  margin-left: 0.4rem;
+  color: #758088;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+#mineRosterEditBtn {
   margin-left: auto;
-  flex: 0 0 auto;
-  color: var(--card-accent);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.roster-action-btn {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border: none;
   background: none;
   border-radius: 0.25rem;
-  color: #6c757d;
+  color: #12b5c4;
 }
 
-.roster-action-btn:hover {
-  background: #f1f3f5;
+#mineRosterEditBtn:hover {
+  background: rgba(18, 181, 196, 0.12);
 }
 
-.roster-action-btn.active {
+#mineRosterEditBtn.active {
   background: #fee2e2;
   color: #dc3545;
 }
 
-.roster-list {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  margin: 0;
-  padding: 0.35rem 0 0;
-  list-style: none;
+#mineRosterTableWrap {
+  flex: 0 0 auto;
+  padding: 0 0.6rem 0.6rem;
+}
+
+#mineRosterTable {
+  width: 100%;
   font-size: 0.8rem;
+  border-collapse: collapse;
 }
 
-.roster-line {
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-  padding: 0.1rem 0;
+#mineRosterTable td {
+  padding: 0.25rem 0.35rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #eee;
 }
 
-.roster-roles {
-  flex: 0 0 auto;
-}
-
-/* Name takes the slack; a long one clips instead of pushing the price out. */
-.roster-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+#mineRosterTable .roster-roles-cell {
   white-space: nowrap;
+  width: 1%;
 }
 
-.roster-price {
-  flex: 0 0 auto;
-  font-variant-numeric: tabular-nums;
+#mineRosterTable .roster-name-cell {
   font-weight: 600;
 }
 
-.roster-remove-btn {
+#mineRosterTable .roster-team-cell {
+  color: #758088;
+  font-size: 0.75rem;
+}
+
+#mineRosterTable .roster-price-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+#mineRosterTable .roster-remove-cell {
+  width: 1%;
+  text-align: right;
+}
+
+.mine-roster-remove-btn {
   flex: 0 0 auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 16px;
@@ -431,12 +412,120 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: #dc3545;
 }
 
-.roster-remove-btn:hover {
+.mine-roster-remove-btn:hover {
   background: #fee2e2;
 }
 
-.roster-empty {
-  color: #6c757d;
+/* Other teams' roster cards — same shape as #mineRosterInner, orange accent
+   instead of the mine cyan, no Serie A team column. */
+.other-roster-panel {
+  flex: 0 0 auto;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: transparent;
+  border: 1px solid var(--fcm-orange);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.other-roster-name {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.6rem;
+  color: var(--fcm-orange);
+  font-weight: 600;
+  text-align: left;
+  font-size: 1.2rem;
+}
+
+.other-roster-stats {
+  margin-left: 0.4rem;
+  color: #758088;
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+
+.other-roster-edit-btn {
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  color: var(--fcm-orange);
+}
+
+.other-roster-edit-btn:hover {
+  background: rgba(255, 160, 18, 0.12);
+}
+
+.other-roster-edit-btn.active {
+  background: #fee2e2;
+  color: #dc3545;
+}
+
+.other-roster-table-wrap {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0 0.6rem 0.6rem;
+}
+
+.other-roster-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.other-roster-table td {
+  padding: 0.25rem 0.35rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #eee;
+}
+
+.other-roster-table .roster-roles-cell {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.other-roster-table .roster-name-cell {
+  font-weight: 600;
+}
+
+.other-roster-table .roster-price-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.other-roster-table .roster-remove-cell {
+  width: 1%;
+  text-align: right;
+}
+
+.other-roster-remove-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0.25rem;
+  color: #dc3545;
+}
+
+.other-roster-remove-btn:hover {
+  background: #fee2e2;
 }
 
 /* Right column — same shape as #playerListZone: a padded zone holding one
