@@ -52,8 +52,27 @@ function playerRow(p) {
   </tr>`;
 }
 
-function emptyRow(message) {
-  return `<tr><td colspan="6" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
+function emptyRow(message, colspan = 6) {
+  return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
+}
+
+// Same shape as playerRow, minus the Sold column — used by the tagged-players drawer table.
+function targetPlayerRow(p) {
+  const classes = [
+    String(p.id) === String(selectedId) ? 'selected-row' : '',
+    p.target ? 'target-row' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
+    <td>${roleBadges(p)}</td>
+    <td>${esc(p.name)}</td>
+    <td>${esc(p.team)}</td>
+    <td class="text-end">${esc(p.qt)}</td>
+    <td class="text-end">${esc(p.fvm)}</td>
+    <td class="text-end">${esc(p.tier)}</td>
+    <td>${esc(p.note)}</td>
+  </tr>`;
 }
 
 // Sortable columns: header element + comparator. Comparator gets the sort
@@ -82,13 +101,26 @@ const comparators = {
   },
   // Number of roles a player covers; same count → Qt.A M descending.
   roles: (a, b, asc) => {
-    const r = dir(byRoleCount(a, b), asc);
+    const r = dir(byRoleCount(a, b), !asc);
     return r !== 0 ? r : byQtDesc(a, b);
   },
-  // Qt.A M value; same price → name ascending, regardless of Qt direction.
+  // Qt.A M value; same value → FVM descending; same FVM → name ascending. Regardless of Qt direction.
   qt: (a, b, asc) => {
-    const q = dir(num(a.qt) - num(b.qt), asc);
-    return q !== 0 ? q : byName(a, b);
+    const q = dir(num(a.qt) - num(b.qt), !asc);
+    if (q !== 0) return q;
+    const f = num(b.fvm) - num(a.fvm);
+    return f !== 0 ? f : byName(a, b);
+  },
+  // Tier ascending (lowest first); ties → Qt.A M desc → FVM desc → name asc, regardless of tier direction.
+  tier: (a, b, asc) => {
+    const ta = a.tier === '' || a.tier == null ? Infinity : num(a.tier);
+    const tb = b.tier === '' || b.tier == null ? Infinity : num(b.tier);
+    const t = dir(ta - tb, asc);
+    if (t !== 0) return t;
+    const q = byQtDesc(a, b);
+    if (q !== 0) return q;
+    const f = num(b.fvm) - num(a.fvm);
+    return f !== 0 ? f : byName(a, b);
   },
 };
 
@@ -119,7 +151,7 @@ function render() {
 
   const roles = selectedRoles();
   const visible = allPlayers.filter(
-    (p) => matchesRoles(p, roles) && !(hideSold.checked && p.soldTo)
+    (p) => matchesRoles(p, roles) && (hideSold.checked || !p.soldTo)
   );
 
   if (sortKey) {
@@ -162,6 +194,69 @@ document.getElementById('rolesAll').addEventListener('click', () => {
 document.getElementById('rolesNone').addEventListener('click', () => {
   setAllRoles(false);
   render();
+});
+
+// --- Tagged players drawer: same filter/sort UX, own state, sold players never shown ---
+const targetRoleChecks = [...document.querySelectorAll('#targetRoleFilter .btn-check')];
+const targetPlayerListBody = document.getElementById('targetPlayerListBody');
+
+let targetSortKey = null;
+let targetSortAsc = true;
+
+const targetSortHeaders = {
+  tier: document.getElementById('targetSortTier'),
+  name: document.getElementById('targetSortName'),
+  team: document.getElementById('targetSortTeam'),
+  roles: document.getElementById('targetSortRoles'),
+  qt: document.getElementById('targetSortQt'),
+};
+
+function targetSelectedRoles() {
+  return new Set(targetRoleChecks.filter((c) => c.checked).map((c) => c.value));
+}
+
+function renderTargetList() {
+  const roles = targetSelectedRoles();
+  const tagged = allPlayers.filter(
+    (p) => (p.tier || p.target || p.note) && matchesRoles(p, roles) && !p.soldTo
+  );
+
+  if (targetSortKey) {
+    tagged.sort((a, b) => comparators[targetSortKey](a, b, targetSortAsc));
+  }
+
+  targetPlayerListBody.innerHTML =
+    tagged.length === 0
+      ? emptyRow('No tagged players match the current filters.', 7)
+      : tagged.map(targetPlayerRow).join('');
+}
+
+function targetSortBy(key) {
+  targetSortAsc = targetSortKey === key ? !targetSortAsc : true;
+  targetSortKey = key;
+
+  for (const [k, header] of Object.entries(targetSortHeaders)) {
+    header.dataset.dir = k === key ? (targetSortAsc ? 'asc' : 'desc') : '';
+  }
+  renderTargetList();
+}
+
+for (const [key, header] of Object.entries(targetSortHeaders)) {
+  header.addEventListener('click', () => targetSortBy(key));
+}
+
+targetRoleChecks.forEach((c) => c.addEventListener('change', renderTargetList));
+document.getElementById('targetRolesAll').addEventListener('click', () => {
+  targetRoleChecks.forEach((c) => {
+    c.checked = true;
+  });
+  renderTargetList();
+});
+document.getElementById('targetRolesNone').addEventListener('click', () => {
+  targetRoleChecks.forEach((c) => {
+    c.checked = false;
+  });
+  renderTargetList();
 });
 
 // --- Teams sidebar ---
@@ -455,6 +550,7 @@ teamsZone.addEventListener('click', (e) => {
 const searchInput = document.getElementById('playerSearch');
 const searchResults = document.getElementById('searchResults');
 const selectedLabel = document.getElementById('selectedPlayer');
+const pickNote = document.getElementById('pickNote');
 
 const MAX_HITS = 5;
 let hits = []; // players currently listed in the dropdown
@@ -532,6 +628,7 @@ function showSelected(p) {
   if (!p) {
     selectedLabel.className = 'is-empty';
     selectedLabel.innerHTML = '<span class="selected-empty">No player selected</span>';
+    pickNote.textContent = '';
     return;
   }
   // The strip takes the colour of the first (main) role badge.
@@ -539,6 +636,13 @@ function showSelected(p) {
   selectedLabel.innerHTML = `<span class="selected-name">${esc(p.name)}</span>
     <span class="selected-team">${esc(p.team)}</span>
     <span class="selected-badges">${roleBadges(p)}</span>`;
+
+  if (p.note) {
+    pickNote.textContent = `${p.note} (${p.tier})`;
+    pickNote.style.color = p.target ? 'var(--fcm-orange)' : '#6c757d';
+  } else {
+    pickNote.textContent = '';
+  }
 }
 
 function selectPlayer(p, { scroll = false } = {}) {
@@ -553,6 +657,7 @@ function selectPlayer(p, { scroll = false } = {}) {
   searchInput.value = '';
   closeResults();
   render();
+  renderTargetList();
   if (scroll) {
     playerListBody.querySelector('.selected-row')?.scrollIntoView({ block: 'center' });
   }
@@ -579,6 +684,7 @@ function clearSelection() {
   message('');
   closeResults();
   render();
+  renderTargetList();
 }
 
 document.getElementById('resetBtn').addEventListener('click', clearSelection);
@@ -749,6 +855,26 @@ document.addEventListener('keydown', (e) => {
     assign();
   }
 });
+// --- Scouting drawer: open/close only ---
+const scoutDrawer = document.getElementById('scoutDrawer');
+const scoutDrawerTab = document.getElementById('scoutDrawerTab');
+
+function toggleScoutDrawer() {
+  const open = scoutDrawer.classList.toggle('open');
+  scoutDrawerTab.setAttribute('aria-expanded', String(open));
+}
+
+scoutDrawerTab.addEventListener('click', toggleScoutDrawer);
+
+// Middle-click anywhere toggles the drawer too. auxclick (not mousedown) so
+// it doesn't fight the browser's native middle-click autoscroll gesture.
+document.addEventListener('auxclick', (e) => {
+  if (e.button === 1) {
+    e.preventDefault();
+    toggleScoutDrawer();
+  }
+});
+
 // --- Boot ---
 const auction = loadAuction();
 
@@ -769,7 +895,15 @@ if (!auction) {
   document.getElementById('mineRosterNameText').textContent = auction.userTeam || '';
   setAllRoles(true); // start unfiltered
   hideSold.checked = false; // browsers restore checkbox state on reload
+  targetRoleChecks.forEach((c) => {
+    c.checked = true;
+  }); // start unfiltered
   render();
+  renderTargetList();
   renderTeams();
   renderLog();
+
+  // No scouting data anywhere in this file — the drawer has nothing to show.
+  const hasScoutingData = allPlayers.some((p) => p.tier || p.target || p.note);
+  scoutDrawer.hidden = !hasScoutingData;
 }

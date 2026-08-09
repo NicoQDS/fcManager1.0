@@ -104,7 +104,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 1rem; /* match "Hide sold" label */
+  font-size: 0.85rem;
 }
 
 #roleFilterActions .btn-link {
@@ -822,7 +822,8 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 /* Assign feedback — empty string collapses the line, so nothing jumps. */
-#assignMsg {
+#assignMsg,
+#pickNote {
   font-size: 0.85rem;
   min-height: 1.2em;
 }
@@ -982,4 +983,154 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   appearance: none;
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* SCOUTING DRAWER — fixed to the right edge, slides in/out. Collapsed by
+   default; the tab stays clickable at any state so it always re-opens. */
+#scoutDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 33.3333vw;
+  height: 100vh;
+  z-index: 30;
+  pointer-events: none; /* only the tab + inner panel should catch clicks */
+}
+
+/* The tab lives inside the panel but sticks out past its left edge, so
+   sliding the panel (via transform below) carries the tab along: flush at
+   the viewport edge when closed, pinned to the panel's left border when open. */
+#scoutDrawerTab {
+  pointer-events: auto;
+  position: absolute;
+  left: -28px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 28px;
+  height: 56px;
+  padding-right: 0.3rem;
+  border: none;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background: var(--fcm-orange);
+  color: #fff;
+  box-shadow: -0.15rem 0 0.4rem rgba(0, 0, 0, 0.08);
+  transition: background 0.15s ease;
+}
+
+#scoutDrawerTab:hover {
+  background: var(--fcm-orange-hover);
+}
+
+#scoutDrawerTab svg {
+  transition: transform 0.2s ease;
+  transform: rotate(180deg); /* points left = "open me" while collapsed */
+}
+
+#scoutDrawer.open #scoutDrawerTab svg {
+  transform: rotate(0deg); /* points right = "close me" while open */
+}
+
+#scoutDrawerInner {
+  position: relative; /* anchors the tab's absolute offset */
+  pointer-events: auto;
+  width: 33.3333vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-left: 1px solid #dee2e6;
+  box-shadow: -0.25rem 0 0.6rem rgba(0, 0, 0, 0.08);
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+}
+
+#scoutDrawer.open #scoutDrawerInner {
+  transform: translateX(0);
+}
+
+#scoutDrawerHead {
+  flex: 0 0 auto;
+  padding: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 700;
+  color: var(--fcm-orange);
+}
+
+#myNotesDrawerBody {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+
+/* Tagged-players table — same look as the main role filter + player list,
+   scoped under target* ids so it runs independent filter/sort state. */
+#targetRoleFilterActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+#targetRoleFilterActions .btn-link {
+  text-decoration: none;
+  color: var(--fcm-orange);
+  font-size: inherit;
+}
+
+#targetRoleFilter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+#targetRoleFilter .btn {
+  min-width: 1.6rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+#targetRoleFilter .btn-check:checked + .btn {
+  color: #fff;
+}
+#target-role-Por:checked + .btn { background: var(--role-por); border-color: var(--role-por); }
+#target-role-Ds:checked  + .btn,
+#target-role-Dc:checked  + .btn,
+#target-role-Dd:checked  + .btn,
+#target-role-B:checked   + .btn { background: var(--role-def); border-color: var(--role-def); }
+#target-role-E:checked   + .btn,
+#target-role-M:checked   + .btn,
+#target-role-C:checked   + .btn { background: var(--role-mid); border-color: var(--role-mid); }
+#target-role-W:checked   + .btn,
+#target-role-T:checked   + .btn { background: var(--role-treq); border-color: var(--role-treq); }
+#target-role-A:checked   + .btn,
+#target-role-Pc:checked  + .btn { background: var(--role-att); border-color: var(--role-att); }
+
+#targetPlayerListTableWrap {
+  overflow-x: auto;
+}
+
+#targetPlayerListTableWrap table {
+  table-layout: auto;
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+#targetPlayerListTableWrap thead th {
+  width: 1%;
+  white-space: nowrap;
+}
+
+#targetPlayerListTableWrap tbody td {
+  white-space: nowrap;
+}
+
+/* Target players — tinted with the app's usual light-blue accent. */
+#targetPlayerListTableWrap tr.target-row > td {
+  background-color: rgba(18, 181, 196, 0.15);
 }

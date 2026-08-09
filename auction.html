@@ -115,6 +115,7 @@
                     </button>
                   </div>
                 </div>
+                <div id="pickNote"></div>
                 <div id="assignMsg" role="status"></div>
               </div>
 
@@ -141,9 +142,7 @@
                     id="hideSold"
                     autocomplete="off"
                   />
-                  <label class="form-check-label" for="hideSold"
-                    >Hide sold</label
-                  >
+                  <label class="form-check-label" for="hideSold">Sold</label>
                 </div>
               </div>
               <div id="roleFilter" role="group" aria-label="Filter by role">
@@ -283,7 +282,7 @@
                       Team <span class="sort-caret"></span>
                     </th>
                     <th id="sortQt" class="sortable text-end">
-                      Qt <span class="sort-caret"></span>
+                      fM <span class="sort-caret"></span>
                     </th>
                     <th class="text-end">FVM</th>
                     <th id="soldHeader" class="text-center">Sold</th>
@@ -349,9 +348,23 @@
               <div id="mineRosterName">
                 <span id="mineRosterNameText"></span>
                 <span id="mineRosterStats"></span>
-                <button type="button" id="mineRosterEditBtn" title="Edit" aria-label="Edit">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                <button
+                  type="button"
+                  id="mineRosterEditBtn"
+                  title="Edit"
+                  aria-label="Edit"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"
+                    />
                   </svg>
                 </button>
               </div>
@@ -368,6 +381,100 @@
         </section>
       </main>
     </div>
+
+    <!-- SCOUTING DRAWER — collapsible, right edge. Tier/Target/Note for the selected player. -->
+    <aside id="scoutDrawer">
+      <div id="scoutDrawerInner">
+        <!-- Absolutely positioned inside the panel, so it rides the same
+             slide transform: flush at the viewport edge when closed, pinned
+             to the panel's left border when open. -->
+        <button
+          type="button"
+          id="scoutDrawerTab"
+          title="Scouting"
+          aria-label="Toggle scouting drawer"
+          aria-expanded="false"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
+            />
+          </svg>
+        </button>
+        <div id="scoutDrawerHead">My notes</div>
+        <div id="myNotesDrawerBody">
+          <div id="targetRoleFilterActions">
+            <span class="text-muted">Roles:</span>
+            <button type="button" id="targetRolesAll" class="btn btn-link btn-sm p-0">
+              Select all
+            </button>
+            <button type="button" id="targetRolesNone" class="btn btn-link btn-sm p-0">
+              Deselect all
+            </button>
+          </div>
+          <div id="targetRoleFilter" role="group" aria-label="Filter by role">
+            <input type="checkbox" class="btn-check" id="target-role-Por" value="Por" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-Por">Por</label>
+            <input type="checkbox" class="btn-check" id="target-role-Dd" value="Dd" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-Dd">Dd</label>
+            <input type="checkbox" class="btn-check" id="target-role-Dc" value="Dc" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-Dc">Dc</label>
+            <input type="checkbox" class="btn-check" id="target-role-Ds" value="Ds" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-Ds">Ds</label>
+            <input type="checkbox" class="btn-check" id="target-role-B" value="B" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-B">B</label>
+            <input type="checkbox" class="btn-check" id="target-role-E" value="E" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-E">E</label>
+            <input type="checkbox" class="btn-check" id="target-role-M" value="M" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-M">M</label>
+            <input type="checkbox" class="btn-check" id="target-role-C" value="C" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-C">C</label>
+            <input type="checkbox" class="btn-check" id="target-role-W" value="W" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-W">W</label>
+            <input type="checkbox" class="btn-check" id="target-role-T" value="T" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-T">T</label>
+            <input type="checkbox" class="btn-check" id="target-role-A" value="A" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-A">A</label>
+            <input type="checkbox" class="btn-check" id="target-role-Pc" value="Pc" autocomplete="off" />
+            <label class="btn btn-sm btn-outline-secondary" for="target-role-Pc">Pc</label>
+          </div>
+          <div id="targetPlayerListTableWrap">
+            <table class="table table-sm table-hover mb-0">
+              <thead>
+                <tr>
+                  <th id="targetSortRoles" class="sortable">
+                    Roles <span class="sort-caret"></span>
+                  </th>
+                  <th id="targetSortName" class="sortable">
+                    Name <span class="sort-caret"></span>
+                  </th>
+                  <th id="targetSortTeam" class="sortable">
+                    Team <span class="sort-caret"></span>
+                  </th>
+                  <th id="targetSortQt" class="sortable text-end">
+                    fM <span class="sort-caret"></span>
+                  </th>
+                  <th class="text-end">FVM</th>
+                  <th id="targetSortTier" class="sortable text-end">
+                    Tier <span class="sort-caret"></span>
+                  </th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="targetPlayerListBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </aside>
 
     <script src="auction.js"></script>
   </body>

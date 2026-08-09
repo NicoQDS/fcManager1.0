@@ -168,7 +168,10 @@ function parsePlayers(sheet) {
   }
 
   const head = rows[headerIdx];
-  const col = (name) => head.indexOf(name);
+  const col = (name) =>
+    head.findIndex(
+      (h) => String(h).trim().toLowerCase() === name.toLowerCase()
+    );
   const cId = col('Id');
   const cRM = col('RM');
   const cNome = col('Nome');
@@ -177,6 +180,9 @@ function parsePlayers(sheet) {
   const cQtI = col('Qt.I M');
   const cDiff = col('Diff.M');
   const cFvm = col('FVM M');
+  const cTier = col('Tier');
+  const cTarget = col('Target');
+  const cNote = col('Note');
 
   const players = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
@@ -196,6 +202,9 @@ function parsePlayers(sheet) {
       qtInitial: r[cQtI],
       diff: r[cDiff],
       fvm: r[cFvm],
+      tier: cTier === -1 ? '' : r[cTier],
+      target: cTarget === -1 ? '' : r[cTarget],
+      note: cNote === -1 ? '' : r[cNote],
     });
   }
   return players;
