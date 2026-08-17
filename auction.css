@@ -24,7 +24,7 @@ body {
 
 #auctionLeague {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0;
   color: var(--fcm-orange);
 }
@@ -176,10 +176,12 @@ body {
 #playerListTableWrap thead th {
   width: 1%;
   white-space: nowrap;
+  padding: 0.4rem 0.6rem;
 }
 
 #playerListTableWrap tbody td {
   white-space: nowrap;
+  padding: 0.4rem 0.6rem;
 }
 
 .sold-row {
@@ -313,7 +315,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: #12b5c4;
   font-weight: 600;
   text-align: left;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 #mineRosterStats {
@@ -429,7 +431,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: var(--fcm-orange);
   font-weight: 600;
   text-align: left;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .other-roster-stats {
@@ -522,7 +524,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 /* Right column — same shape as #playerListZone: a padded zone holding one
    bound card, teams on top, sales log under them. */
 #teamsColumn {
-  flex: 0 0 260px;
+  flex: 0 0 350px;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
