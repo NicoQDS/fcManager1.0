@@ -157,6 +157,26 @@ numTeams.addEventListener('blur', () => {
 
 numTeams.addEventListener('input', syncTeamNameInputs);
 
+// Normalize a "Titolarità" cell to a 0–100 number, or '' when empty/unreadable.
+// Excel percent-formatted cells arrive as fractions (0.8), so values ≤ 1 are scaled up.
+function parsePercent(v) {
+  if (v === '' || v == null) {
+    return '';
+  }
+  const text = String(v).trim();
+  const n = parseFloat(text.replace('%', '').replace(',', '.'));
+  if (Number.isNaN(n)) {
+    return '';
+  }
+  return Math.round(!text.includes('%') && n <= 1 ? n * 100 : n);
+}
+
+// "Infortunio" cell: 1 light, 2 medium, 3 severe. Anything else counts as no injury ('').
+function parseInjury(v) {
+  const n = Number(String(v ?? '').trim());
+  return [1, 2, 3].includes(n) ? n : '';
+}
+
 // Turn the "Tutti" sheet into our player shape.
 function parsePlayers(sheet) {
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
@@ -183,6 +203,9 @@ function parsePlayers(sheet) {
   const cTier = col('Tier');
   const cTarget = col('Target');
   const cNote = col('Note');
+  const cStarter = col('Titolarità');
+  const cInjury = col('Infortunio');
+  const cGkRank = col('Gerarchia portiere');
 
   const players = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
@@ -205,6 +228,9 @@ function parsePlayers(sheet) {
       tier: cTier === -1 ? '' : r[cTier],
       target: cTarget === -1 ? '' : r[cTarget],
       note: cNote === -1 ? '' : r[cNote],
+      starter: cStarter === -1 ? '' : parsePercent(r[cStarter]),
+      injury: cInjury === -1 ? '' : parseInjury(r[cInjury]),
+      gkRank: cGkRank === -1 ? '' : String(r[cGkRank]).trim(),
     });
   }
   return players;

@@ -44,15 +44,56 @@ function playerRow(p) {
     : '';
   return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
     <td>${roleBadges(p)}</td>
-    <td>${esc(p.name)}</td>
+    <td>${esc(p.name)}${gkRankBadge(p.gkRank)}</td>
     <td>${esc(p.team)}</td>
     <td class="text-end">${esc(p.qt)}</td>
     <td class="text-end">${esc(p.fvm)}</td>
+    ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
+    ${showInjury ? `<td class="text-center">${injuryBadge(p.injury)}</td>` : ''}
     <td class="text-center">${sold}</td>
   </tr>`;
 }
 
-function emptyRow(message, colspan = 6) {
+// Green ≥ 75%, yellow 50–74%, red below 50%.
+function starterBadge(pct) {
+  if (pct === '' || pct == null) {
+    return '';
+  }
+  const color = pct >= 75 ? 'text-bg-success' : pct >= 50 ? 'text-bg-warning' : 'text-bg-danger';
+  return `<span class="badge rounded-pill ${color}">${esc(pct)}%</span>`;
+}
+
+// Goalkeeper pecking order ("Gerarchia portiere": 1–5 or "ballottaggio"), shown beside the name.
+// 1 gold, 2 silver, 3 bronze, anything else light grey; ballottaggio becomes a blue swap icon.
+const GK_RANK_COLORS = { 1: 'gk-gold', 2: 'gk-silver', 3: 'gk-bronze' };
+
+function gkRankBadge(rank) {
+  if (!rank) {
+    return '';
+  }
+  if (rank.toLowerCase() === 'ballottaggio') {
+    return ` <span class="badge text-bg-primary" title="Ballottaggio"><i class="bi bi-arrow-repeat"></i></span>`;
+  }
+  const color = GK_RANK_COLORS[rank] || 'text-bg-light border';
+  return ` <span class="badge ${color}">${esc(rank)}</span>`;
+}
+
+// 1 light (yellow), 2 medium (orange), 3 severe (red).
+const INJURY_COLORS = {
+  1: 'text-bg-warning',
+  2: 'injury-medium',
+  3: 'text-bg-danger',
+};
+
+function injuryBadge(level) {
+  const color = INJURY_COLORS[level];
+  if (!color) {
+    return '';
+  }
+  return `<span class="badge rounded-pill ${color}">${level}</span>`;
+}
+
+function emptyRow(message, colspan = 6 + showStarter + showInjury) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
@@ -82,6 +123,7 @@ const sortHeaders = {
   team: document.getElementById('sortTeam'),
   roles: document.getElementById('sortRoles'),
   qt: document.getElementById('sortQt'),
+  starter: document.getElementById('starterHeader'),
 };
 
 const dir = (v, asc) => (asc ? v : -v);
@@ -90,6 +132,13 @@ const num = (v) => parseFloat(v) || 0;
 const byName = (a, b) => str(a.name).localeCompare(str(b.name), 'it', { sensitivity: 'base' });
 const byTeam = (a, b) => str(a.team).localeCompare(str(b.team), 'it', { sensitivity: 'base' });
 const byQtDesc = (a, b) => num(b.qt) - num(a.qt); // Qt.A M, highest first
+// Titolarità, highest first; players without a value sink to the bottom.
+const starterOrNeg = (p) => (p.starter === '' || p.starter == null ? -Infinity : num(p.starter));
+const byStarterDesc = (a, b) => {
+  const sa = starterOrNeg(a);
+  const sb = starterOrNeg(b);
+  return sa === sb ? 0 : sb - sa;
+};
 const byRoleCount = (a, b) => (a.roles || []).length - (b.roles || []).length;
 
 const comparators = {
@@ -104,9 +153,26 @@ const comparators = {
     const r = dir(byRoleCount(a, b), !asc);
     return r !== 0 ? r : byQtDesc(a, b);
   },
-  // Qt.A M value; same value → FVM descending; same FVM → name ascending. Regardless of Qt direction.
+  // Qt.A M value; same value → Titolarità descending → FVM descending → name ascending. Regardless of Qt direction.
   qt: (a, b, asc) => {
     const q = dir(num(a.qt) - num(b.qt), !asc);
+    if (q !== 0) return q;
+    const s = byStarterDesc(a, b);
+    if (s !== 0) return s;
+    const f = num(b.fvm) - num(a.fvm);
+    return f !== 0 ? f : byName(a, b);
+  },
+  // Titolarità, first click highest first; players without a value always last.
+  // Ties → Qt.A M desc → FVM desc → name asc, regardless of Titolarità direction.
+  starter: (a, b, asc) => {
+    const ea = a.starter === '' || a.starter == null;
+    const eb = b.starter === '' || b.starter == null;
+    if (ea !== eb) return ea ? 1 : -1;
+    if (!ea) {
+      const t = dir(num(a.starter) - num(b.starter), !asc);
+      if (t !== 0) return t;
+    }
+    const q = byQtDesc(a, b);
     if (q !== 0) return q;
     const f = num(b.fvm) - num(a.fvm);
     return f !== 0 ? f : byName(a, b);
@@ -128,6 +194,8 @@ const comparators = {
 const roleChecks = [...document.querySelectorAll('#roleFilter .btn-check')];
 
 let allPlayers = [];
+let showStarter = false; // true when the file carries any "Titolarità" value
+let showInjury = false; // true when the file carries any "Infortunio" value
 let sortKey = null;
 let sortAsc = true;
 let selectedId = null;
@@ -883,6 +951,10 @@ if (!auction) {
   renderLog();
 } else {
   allPlayers = auction.players || [];
+  showStarter = allPlayers.some((p) => p.starter !== '' && p.starter != null);
+  document.getElementById('starterHeader').hidden = !showStarter;
+  showInjury = allPlayers.some((p) => p.injury !== '' && p.injury != null);
+  document.getElementById('injuryHeader').hidden = !showInjury;
   auction.log = auction.log || []; // older auction files have no log yet
   teams = makeTeams(auction.teams, auction.initialCredits);
   hydrateTeams(); // replay past assignments into credits and rosters

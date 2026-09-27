@@ -211,6 +211,27 @@ body {
   color: #fff;
 }
 
+.injury-medium {
+  background-color: var(--fcm-orange);
+  color: #fff;
+}
+
+/* Goalkeeper pecking order pills. */
+.gk-gold {
+  background-color: #d4af37;
+  color: #fff;
+}
+
+.gk-silver {
+  background-color: #c0c0c0;
+  color: #212529;
+}
+
+.gk-bronze {
+  background-color: #cd7f32;
+  color: #fff;
+}
+
 /* Official mantra line colors (used by badges AND role filter buttons). */
 :root {
   --fcm-mine: #12b5c4; /* accent for anything belonging to the user's team */
