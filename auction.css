@@ -1115,6 +1115,85 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   padding: 0.75rem;
 }
 
+/* MANTRA DRAWER — same mechanics as the scouting drawer, light-blue tab
+   placed just below the orange one (56px tab + 6px gap). */
+.side-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 33.3333vw;
+  height: 100vh;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.side-drawer.open {
+  z-index: 31; /* above the scouting drawer while open */
+}
+
+.side-drawer-tab {
+  pointer-events: auto;
+  position: absolute;
+  left: -28px;
+  top: calc(50% + 34px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 28px;
+  height: 56px;
+  padding-right: 0.3rem;
+  border: none;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background: var(--fcm-mine);
+  color: #fff;
+  box-shadow: -0.15rem 0 0.4rem rgba(0, 0, 0, 0.08);
+  transition: background 0.15s ease;
+}
+
+.side-drawer-tab:hover {
+  background: #0f9aa7;
+}
+
+.side-drawer-tab svg {
+  transition: transform 0.2s ease;
+  transform: rotate(180deg);
+}
+
+.side-drawer.open .side-drawer-tab svg {
+  transform: rotate(0deg);
+}
+
+.side-drawer-inner {
+  position: relative;
+  pointer-events: auto;
+  width: 33.3333vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-left: 1px solid #dee2e6;
+  box-shadow: -0.25rem 0 0.6rem rgba(0, 0, 0, 0.08);
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+}
+
+.side-drawer.open .side-drawer-inner {
+  transform: translateX(0);
+}
+
+.side-drawer-head {
+  flex: 0 0 auto;
+  padding: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 700;
+  color: var(--fcm-mine);
+}
+
+.side-drawer-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
 /* Tagged-players table — same look as the main role filter + player list,
    scoped under target* ids so it runs independent filter/sort state. */
 #targetRoleFilterActions {

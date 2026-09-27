@@ -989,9 +989,30 @@ const scoutDrawerTab = document.getElementById('scoutDrawerTab');
 function toggleScoutDrawer() {
   const open = scoutDrawer.classList.toggle('open');
   scoutDrawerTab.setAttribute('aria-expanded', String(open));
+  if (open) {
+    closeMantraDrawer();
+  }
 }
 
 scoutDrawerTab.addEventListener('click', toggleScoutDrawer);
+
+// --- Mantra drawer: formations sheet, only one drawer open at a time ---
+const mantraDrawer = document.getElementById('mantraDrawer');
+const mantraDrawerTab = document.getElementById('mantraDrawerTab');
+
+function closeMantraDrawer() {
+  mantraDrawer.classList.remove('open');
+  mantraDrawerTab.setAttribute('aria-expanded', 'false');
+}
+
+mantraDrawerTab.addEventListener('click', () => {
+  const open = mantraDrawer.classList.toggle('open');
+  mantraDrawerTab.setAttribute('aria-expanded', String(open));
+  if (open) {
+    scoutDrawer.classList.remove('open');
+    scoutDrawerTab.setAttribute('aria-expanded', 'false');
+  }
+});
 
 // Middle-click anywhere toggles the drawer too. auxclick (not mousedown) so
 // it doesn't fight the browser's native middle-click autoscroll gesture.
