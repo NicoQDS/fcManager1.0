@@ -216,20 +216,39 @@ body {
   color: #fff;
 }
 
-/* Goalkeeper pecking order pills. */
-.gk-gold {
-  background-color: #d4af37;
+/* Rank-1 badges beside the name: same green as the defensive role badges (Dc, Ds, Dd, B). */
+.badge-def {
+  background-color: var(--role-def);
+  border: 1px solid var(--role-def);
   color: #fff;
 }
 
-.gk-silver {
-  background-color: #c0c0c0;
-  color: #212529;
+/* Yellow badges beside the name: same orange-yellow as the Por role badge. */
+.badge-por {
+  background-color: var(--role-por);
+  border: 1px solid var(--role-por);
+  color: #fff;
 }
 
-.gk-bronze {
-  background-color: #cd7f32;
+/* Ballottaggio badges: same blue as the midfield role badges (E, M, C). */
+.badge-mid {
+  background-color: var(--role-mid);
+  border: 1px solid var(--role-mid);
   color: #fff;
+}
+
+/* Red badges beside the name: same red as the attack role badges (A, Pc). */
+.badge-att {
+  background-color: var(--role-att);
+  border: 1px solid var(--role-att);
+  color: #fff;
+}
+
+/* Note info pill: same shape as the injury "!" pill, dark grey outline, no fill. */
+.note-badge {
+  background-color: transparent;
+  border: 1px solid var(--bs-gray-700);
+  color: var(--bs-gray-700);
 }
 
 /* Official mantra line colors (used by badges AND role filter buttons). */

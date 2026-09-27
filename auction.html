@@ -282,17 +282,20 @@
                     <th id="sortName" class="sortable">
                       Name <span class="sort-caret"></span>
                     </th>
+                    <th id="badgesHeader" hidden></th>
                     <th id="sortTeam" class="sortable">
                       Team <span class="sort-caret"></span>
                     </th>
                     <th id="sortQt" class="sortable text-end">
                       fM <span class="sort-caret"></span>
                     </th>
+                    <th id="sortMaxPrice" class="sortable text-end" hidden>
+                      Max <span class="sort-caret"></span>
+                    </th>
                     <th class="text-end">FVM</th>
                     <th id="starterHeader" class="sortable text-center" hidden>
                       Tit. <span class="sort-caret"></span>
                     </th>
-                    <th id="injuryHeader" class="text-center" hidden>Inj.</th>
                     <th id="soldHeader" class="text-center">Sold</th>
                   </tr>
                 </thead>
@@ -474,7 +477,7 @@
                   <th id="targetSortTier" class="sortable text-end">
                     Tier <span class="sort-caret"></span>
                   </th>
-                  <th>Note</th>
+                  <th id="targetBadgesHeader" hidden></th>
                 </tr>
               </thead>
               <tbody id="targetPlayerListBody"></tbody>
@@ -484,6 +487,7 @@
       </div>
     </aside>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="auction.js"></script>
   </body>
 </html>

@@ -171,6 +171,12 @@ function parsePercent(v) {
   return Math.round(!text.includes('%') && n <= 1 ? n * 100 : n);
 }
 
+// Numeric cell ("12", 12, "12,5") → number, or '' when empty/unreadable.
+function parseNumber(v) {
+  const n = parseFloat(String(v ?? '').trim().replace(',', '.'));
+  return Number.isNaN(n) ? '' : n;
+}
+
 // "Infortunio" cell: 1 light, 2 medium, 3 severe. Anything else counts as no injury ('').
 function parseInjury(v) {
   const n = Number(String(v ?? '').trim());
@@ -206,6 +212,8 @@ function parsePlayers(sheet) {
   const cStarter = col('Titolarità');
   const cInjury = col('Infortunio');
   const cGkRank = col('Gerarchia portiere');
+  const cPenaltyRank = col('Rigorista');
+  const cMaxPrice = col('Prezzo massimo');
 
   const players = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
@@ -231,6 +239,8 @@ function parsePlayers(sheet) {
       starter: cStarter === -1 ? '' : parsePercent(r[cStarter]),
       injury: cInjury === -1 ? '' : parseInjury(r[cInjury]),
       gkRank: cGkRank === -1 ? '' : String(r[cGkRank]).trim(),
+      penaltyRank: cPenaltyRank === -1 ? '' : String(r[cPenaltyRank]).trim(),
+      maxPrice: cMaxPrice === -1 ? '' : parseNumber(r[cMaxPrice]),
     });
   }
   return players;

@@ -20,7 +20,8 @@ function esc(v) {
   return String(v ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function roleBadges(p) {
@@ -44,45 +45,53 @@ function playerRow(p) {
     : '';
   return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
     <td>${roleBadges(p)}</td>
-    <td>${esc(p.name)}${gkRankBadge(p.gkRank)}</td>
+    <td>${esc(p.name)}</td>
+    ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
     <td>${esc(p.team)}</td>
     <td class="text-end">${esc(p.qt)}</td>
+    ${showMaxPrice ? `<td class="text-end">${esc(p.maxPrice)}</td>` : ''}
     <td class="text-end">${esc(p.fvm)}</td>
     ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
-    ${showInjury ? `<td class="text-center">${injuryBadge(p.injury)}</td>` : ''}
     <td class="text-center">${sold}</td>
   </tr>`;
 }
 
-// Green ≥ 75%, yellow 50–74%, red below 50%.
+// Role-line colours: green (Dc) ≥ 75%, yellow (Por) 50–74%, red (Pc) below 50%.
 function starterBadge(pct) {
   if (pct === '' || pct == null) {
     return '';
   }
-  const color = pct >= 75 ? 'text-bg-success' : pct >= 50 ? 'text-bg-warning' : 'text-bg-danger';
-  return `<span class="badge rounded-pill ${color}">${esc(pct)}%</span>`;
+  const color = pct >= 75 ? 'badge-def' : pct >= 50 ? 'badge-por' : 'badge-att';
+  return `<span class="badge rounded-pill fw-normal ${color}">${esc(pct)}%</span>`;
 }
 
-// Goalkeeper pecking order ("Gerarchia portiere": 1–5 or "ballottaggio"), shown beside the name.
-// 1 gold, 2 silver, 3 bronze, anything else light grey; ballottaggio becomes a blue swap icon.
-const GK_RANK_COLORS = { 1: 'gk-gold', 2: 'gk-silver', 3: 'gk-bronze' };
+// Pecking-order badge beside the name, shared by "Gerarchia portiere" and "Rigorista" (1–5 or "ballottaggio").
+// 1 defence-line green, 2 goalkeeper-line yellow, 3 attack-line red, anything else light grey; ballottaggio becomes a midfield-blue swap icon.
+const RANK_COLORS = {
+  1: 'badge-def',
+  2: 'badge-por',
+  3: 'badge-att',
+};
 
-function gkRankBadge(rank) {
+// label replaces the number in the badge text (e.g. "rig" for Rigorista); colour still follows the rank.
+// pill switches to a rounded pill badge.
+function rankBadge(rank, { label, pill = false } = {}) {
   if (!rank) {
     return '';
   }
+  const shape = pill ? 'badge rounded-pill fw-normal' : 'badge fw-normal';
   if (rank.toLowerCase() === 'ballottaggio') {
-    return ` <span class="badge text-bg-primary" title="Ballottaggio"><i class="bi bi-arrow-repeat"></i></span>`;
+    return ` <span class="${shape} badge-mid" title="Ballottaggio"><i class="bi bi-arrow-repeat"></i></span>`;
   }
-  const color = GK_RANK_COLORS[rank] || 'text-bg-light border';
-  return ` <span class="badge ${color}">${esc(rank)}</span>`;
+  const color = RANK_COLORS[rank] || 'text-bg-light border';
+  return ` <span class="${shape} ${color}">${esc(label ?? rank)}</span>`;
 }
 
-// 1 light (yellow), 2 medium (orange), 3 severe (red).
+// 1 light (goalkeeper-line yellow), 2 medium (orange), 3 severe (attack-line red).
 const INJURY_COLORS = {
-  1: 'text-bg-warning',
+  1: 'badge-por',
   2: 'injury-medium',
-  3: 'text-bg-danger',
+  3: 'badge-att',
 };
 
 function injuryBadge(level) {
@@ -90,14 +99,32 @@ function injuryBadge(level) {
   if (!color) {
     return '';
   }
-  return `<span class="badge rounded-pill ${color}">${level}</span>`;
+  return ` <span class="badge rounded-pill fw-normal ${color}" title="Infortunio ${level}">!</span>`;
 }
 
-function emptyRow(message, colspan = 6 + showStarter + showInjury) {
+// Info icon beside the name when the player has a note; hover shows the note in a Bootstrap tooltip.
+function noteIcon(note) {
+  if (!String(note ?? '').trim()) {
+    return '';
+  }
+  return ` <span class="badge rounded-pill fw-normal note-badge" data-bs-toggle="tooltip" data-bs-title="${esc(note)}">i</span>`;
+}
+
+// Everything shown in the badges column, in display order.
+function playerBadges(p) {
+  return [
+    rankBadge(p.gkRank, { label: 'P' }),
+    rankBadge(p.penaltyRank, { label: 'rig', pill: true }),
+    injuryBadge(p.injury),
+    noteIcon(p.note),
+  ].join('');
+}
+
+function emptyRow(message, colspan = 6 + showBadges + showMaxPrice + showStarter) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
-// Same shape as playerRow, minus the Sold column — used by the tagged-players drawer table.
+// Tagged-players drawer row: core columns + Tier, then the same badges column as the main table.
 function targetPlayerRow(p) {
   const classes = [
     String(p.id) === String(selectedId) ? 'selected-row' : '',
@@ -112,7 +139,7 @@ function targetPlayerRow(p) {
     <td class="text-end">${esc(p.qt)}</td>
     <td class="text-end">${esc(p.fvm)}</td>
     <td class="text-end">${esc(p.tier)}</td>
-    <td>${esc(p.note)}</td>
+    ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
   </tr>`;
 }
 
@@ -123,6 +150,7 @@ const sortHeaders = {
   team: document.getElementById('sortTeam'),
   roles: document.getElementById('sortRoles'),
   qt: document.getElementById('sortQt'),
+  maxPrice: document.getElementById('sortMaxPrice'),
   starter: document.getElementById('starterHeader'),
 };
 
@@ -162,6 +190,23 @@ const comparators = {
     const f = num(b.fvm) - num(a.fvm);
     return f !== 0 ? f : byName(a, b);
   },
+  // Prezzo massimo, first click highest first; players without a value always last.
+  // Ties → Qt.A M desc → Titolarità desc → FVM desc → name asc, regardless of direction.
+  maxPrice: (a, b, asc) => {
+    const ea = a.maxPrice === '' || a.maxPrice == null;
+    const eb = b.maxPrice === '' || b.maxPrice == null;
+    if (ea !== eb) return ea ? 1 : -1;
+    if (!ea) {
+      const m = dir(num(a.maxPrice) - num(b.maxPrice), !asc);
+      if (m !== 0) return m;
+    }
+    const q = byQtDesc(a, b);
+    if (q !== 0) return q;
+    const s = byStarterDesc(a, b);
+    if (s !== 0) return s;
+    const f = num(b.fvm) - num(a.fvm);
+    return f !== 0 ? f : byName(a, b);
+  },
   // Titolarità, first click highest first; players without a value always last.
   // Ties → Qt.A M desc → FVM desc → name asc, regardless of Titolarità direction.
   starter: (a, b, asc) => {
@@ -195,7 +240,8 @@ const roleChecks = [...document.querySelectorAll('#roleFilter .btn-check')];
 
 let allPlayers = [];
 let showStarter = false; // true when the file carries any "Titolarità" value
-let showInjury = false; // true when the file carries any "Infortunio" value
+let showBadges = false; // true when any player has something for the badges column
+let showMaxPrice = false; // true when the file carries any "Prezzo massimo" value
 let sortKey = null;
 let sortAsc = true;
 let selectedId = null;
@@ -226,8 +272,19 @@ function render() {
     visible.sort((a, b) => comparators[sortKey](a, b, sortAsc));
   }
 
+  disposeTooltips(playerListBody);
   playerListBody.innerHTML =
     visible.length === 0 ? emptyRow('No players match the current filters.') : visible.map(playerRow).join('');
+}
+
+// Note tooltips (Bootstrap): delegated so re-rendered rows work without re-init.
+new bootstrap.Tooltip(playerListBody, { selector: '[data-bs-toggle="tooltip"]' });
+
+// Drop tooltips of rows about to be replaced, so none stay stuck on screen.
+function disposeTooltips(tbody) {
+  tbody.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+    bootstrap.Tooltip.getInstance(el)?.dispose();
+  });
 }
 
 hideSold.addEventListener('change', render);
@@ -267,6 +324,7 @@ document.getElementById('rolesNone').addEventListener('click', () => {
 // --- Tagged players drawer: same filter/sort UX, own state, sold players never shown ---
 const targetRoleChecks = [...document.querySelectorAll('#targetRoleFilter .btn-check')];
 const targetPlayerListBody = document.getElementById('targetPlayerListBody');
+new bootstrap.Tooltip(targetPlayerListBody, { selector: '[data-bs-toggle="tooltip"]' });
 
 let targetSortKey = null;
 let targetSortAsc = true;
@@ -293,9 +351,10 @@ function renderTargetList() {
     tagged.sort((a, b) => comparators[targetSortKey](a, b, targetSortAsc));
   }
 
+  disposeTooltips(targetPlayerListBody);
   targetPlayerListBody.innerHTML =
     tagged.length === 0
-      ? emptyRow('No tagged players match the current filters.', 7)
+      ? emptyRow('No tagged players match the current filters.', 6 + showBadges)
       : tagged.map(targetPlayerRow).join('');
 }
 
@@ -953,8 +1012,11 @@ if (!auction) {
   allPlayers = auction.players || [];
   showStarter = allPlayers.some((p) => p.starter !== '' && p.starter != null);
   document.getElementById('starterHeader').hidden = !showStarter;
-  showInjury = allPlayers.some((p) => p.injury !== '' && p.injury != null);
-  document.getElementById('injuryHeader').hidden = !showInjury;
+  showBadges = allPlayers.some((p) => playerBadges(p) !== '');
+  document.getElementById('badgesHeader').hidden = !showBadges;
+  document.getElementById('targetBadgesHeader').hidden = !showBadges;
+  showMaxPrice = allPlayers.some((p) => p.maxPrice !== '' && p.maxPrice != null);
+  document.getElementById('sortMaxPrice').hidden = !showMaxPrice;
   auction.log = auction.log || []; // older auction files have no log yet
   teams = makeTeams(auction.teams, auction.initialCredits);
   hydrateTeams(); // replay past assignments into credits and rosters
