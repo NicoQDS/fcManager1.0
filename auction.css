@@ -1345,12 +1345,12 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 /* Same box as #resetBtn; the icon font glyph sized to match its 16px svg. */
 #targetRolesExpand {
   --bs-btn-padding-x: 4px;
-  --bs-btn-bg: var(--fcm-mine);
-  --bs-btn-border-color: var(--fcm-mine);
-  --bs-btn-hover-bg: #0e8f9b;
-  --bs-btn-hover-border-color: #0e8f9b;
-  --bs-btn-active-bg: #0e8f9b;
-  --bs-btn-active-border-color: #0e8f9b;
+  --bs-btn-bg: var(--fcm-orange);
+  --bs-btn-border-color: var(--fcm-orange);
+  --bs-btn-hover-bg: var(--fcm-orange-hover);
+  --bs-btn-hover-border-color: var(--fcm-orange-hover);
+  --bs-btn-active-bg: var(--fcm-orange-hover);
+  --bs-btn-active-border-color: var(--fcm-orange-hover);
   aspect-ratio: 1;
 }
 
