@@ -46,12 +46,8 @@ function playerRow(p) {
   return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
     <td>${roleBadges(p)}</td>
     <td>${esc(p.name)}</td>
-    ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
     <td>${esc(p.team)}</td>
     <td class="text-end">${esc(p.qt)}</td>
-    ${showMaxPrice ? `<td class="text-end">${esc(p.maxPrice)}</td>` : ''}
-    <td class="text-end">${esc(p.fvm)}</td>
-    ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
     <td class="text-center">${sold}</td>
   </tr>`;
 }
@@ -120,7 +116,7 @@ function playerBadges(p) {
   ].join('');
 }
 
-function emptyRow(message, colspan = 6 + showBadges + showMaxPrice + showStarter) {
+function emptyRow(message, colspan = 5) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
@@ -137,7 +133,8 @@ function targetPlayerRow(p) {
     <td>${esc(p.name)}</td>
     <td>${esc(p.team)}</td>
     <td class="text-end">${esc(p.qt)}</td>
-    <td class="text-end">${esc(p.fvm)}</td>
+    ${showMaxPrice ? `<td class="text-end">${esc(p.maxPrice)}</td>` : ''}
+    ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
     <td class="text-end">${esc(p.tier)}</td>
     ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
   </tr>`;
@@ -150,8 +147,6 @@ const sortHeaders = {
   team: document.getElementById('sortTeam'),
   roles: document.getElementById('sortRoles'),
   qt: document.getElementById('sortQt'),
-  maxPrice: document.getElementById('sortMaxPrice'),
-  starter: document.getElementById('starterHeader'),
 };
 
 const dir = (v, asc) => (asc ? v : -v);
@@ -255,7 +250,7 @@ function matchesRoles(p, roles) {
   return (p.roles || []).some((r) => roles.has(r));
 }
 
-const hideSold = document.getElementById('hideSold');
+const showSold = document.getElementById('showSold');
 
 function render() {
   if (allPlayers.length === 0) {
@@ -265,7 +260,7 @@ function render() {
 
   const roles = selectedRoles();
   const visible = allPlayers.filter(
-    (p) => matchesRoles(p, roles) && (hideSold.checked || !p.soldTo)
+    (p) => matchesRoles(p, roles) && (showSold.checked || !p.soldTo)
   );
 
   if (sortKey) {
@@ -287,7 +282,7 @@ function disposeTooltips(tbody) {
   });
 }
 
-hideSold.addEventListener('change', render);
+showSold.addEventListener('change', render);
 
 function sortBy(key) {
   sortAsc = sortKey === key ? !sortAsc : true;
@@ -335,6 +330,8 @@ const targetSortHeaders = {
   team: document.getElementById('targetSortTeam'),
   roles: document.getElementById('targetSortRoles'),
   qt: document.getElementById('targetSortQt'),
+  maxPrice: document.getElementById('targetSortMaxPrice'),
+  starter: document.getElementById('targetSortStarter'),
 };
 
 function targetSelectedRoles() {
@@ -354,7 +351,7 @@ function renderTargetList() {
   disposeTooltips(targetPlayerListBody);
   targetPlayerListBody.innerHTML =
     tagged.length === 0
-      ? emptyRow('No tagged players match the current filters.', 6 + showBadges)
+      ? emptyRow('No tagged players match the current filters.', 5 + showBadges + showMaxPrice + showStarter)
       : tagged.map(targetPlayerRow).join('');
 }
 
@@ -384,6 +381,21 @@ document.getElementById('targetRolesNone').addEventListener('click', () => {
     c.checked = false;
   });
   renderTargetList();
+});
+
+// Scroll the table so the currently selected player is the first row under
+// the sticky header.
+const targetPlayerListWrap = document.getElementById('targetPlayerListTableWrap');
+const targetPlayerListHead = targetPlayerListWrap.querySelector('thead');
+document.getElementById('targetRolesExpand').addEventListener('click', () => {
+  const row = targetPlayerListBody.querySelector('.selected-row');
+  if (!row) {
+    return;
+  }
+  targetPlayerListWrap.scrollTop +=
+    row.getBoundingClientRect().top -
+    targetPlayerListWrap.getBoundingClientRect().top -
+    targetPlayerListHead.offsetHeight;
 });
 
 // --- Teams sidebar ---
@@ -459,6 +471,22 @@ function renderTeams() {
     : '';
   renderMineRoster(mine);
   renderOtherRosters();
+  renderAuctionProgress();
+}
+
+// Auction completeness when there's a roster cap: players bought over every
+// team filling all its slots.
+const auctionProgress = document.getElementById('auctionProgress');
+
+function renderAuctionProgress() {
+  const cap = auction && auction.maxBuyableEnabled ? num(auction.maxBuyable) : 0;
+  const slots = teams.length * cap;
+  auctionProgress.hidden = !(slots > 0);
+  if (auctionProgress.hidden) {
+    return;
+  }
+  const bought = teams.reduce((sum, t) => sum + Math.min(t.roster.length, cap), 0);
+  auctionProgress.textContent = `${((bought / slots) * 100).toFixed(1)}%`;
 }
 
 // Same order as the role filter buttons: goalkeeper, defence, midfield,
@@ -692,11 +720,15 @@ function norm(v) {
 }
 
 // Names starting with the query rank above names merely containing it;
-// within each group the pricier player (Qt.A M) comes first.
+// within each group the pricier player (Qt.A M) comes first. Sold players
+// follow the table: listed only while "Sold" is checked.
 function searchPlayers(query) {
   const q = norm(query);
   const scored = [];
   for (const p of allPlayers) {
+    if (p.soldTo && !showSold.checked) {
+      continue;
+    }
     const at = norm(p.name).indexOf(q);
     if (at !== -1) {
       scored.push({ p, starts: at === 0 ? 0 : 1 });
@@ -1032,12 +1064,11 @@ if (!auction) {
 } else {
   allPlayers = auction.players || [];
   showStarter = allPlayers.some((p) => p.starter !== '' && p.starter != null);
-  document.getElementById('starterHeader').hidden = !showStarter;
+  document.getElementById('targetSortStarter').hidden = !showStarter;
   showBadges = allPlayers.some((p) => playerBadges(p) !== '');
-  document.getElementById('badgesHeader').hidden = !showBadges;
   document.getElementById('targetBadgesHeader').hidden = !showBadges;
   showMaxPrice = allPlayers.some((p) => p.maxPrice !== '' && p.maxPrice != null);
-  document.getElementById('sortMaxPrice').hidden = !showMaxPrice;
+  document.getElementById('targetSortMaxPrice').hidden = !showMaxPrice;
   auction.log = auction.log || []; // older auction files have no log yet
   teams = makeTeams(auction.teams, auction.initialCredits);
   hydrateTeams(); // replay past assignments into credits and rosters
@@ -1049,7 +1080,7 @@ if (!auction) {
   rulesetBadge.classList.add(isClassic ? 'ruleset-badge-classic' : 'ruleset-badge-mantra');
   document.getElementById('mineRosterNameText').textContent = auction.userTeam || '';
   setAllRoles(true); // start unfiltered
-  hideSold.checked = false; // browsers restore checkbox state on reload
+  showSold.checked = false; // browsers restore checkbox state on reload
   targetRoleChecks.forEach((c) => {
     c.checked = true;
   }); // start unfiltered
