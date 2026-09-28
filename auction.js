@@ -192,7 +192,7 @@ function targetPlayerRow(p) {
     </span></td>
     <td>${esc(p.team)}</td>
     <td class="text-center">${tierCircle(p)}</td>
-    <td>${esc(p.qt)}</td>
+    <td class="text-center">${esc(p.qt)}</td>
     ${showMaxPrice ? `<td class="text-center">${maxPriceBox(p)}</td>` : ''}
     ${showNotes ? `<td class="text-nowrap">${noteIcon(p.note)}</td>` : ''}
   </tr>`;

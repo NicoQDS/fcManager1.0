@@ -295,9 +295,10 @@ body {
   padding-left: 5px;
 }
 
-/* Start (titolarità) heading: an invisible copy of the sort arrow on the left
-   balances the real one on the right, so "start" sits centred over its badges. */
-#targetSortStarter::before {
+/* Centred sortable headings (pen., start, tier, fM): an invisible copy of the
+   sort arrow on the left balances the real one on the right, so the word sits
+   centred over its column. */
+#targetPlayerListTableWrap th.sortable.text-center::before {
   content: '\2195';
   visibility: hidden;
   font-size: 0.8em;
