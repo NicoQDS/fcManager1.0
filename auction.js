@@ -106,14 +106,18 @@ function noteIcon(note) {
   return ` <span class="badge rounded-pill fw-normal note-badge" data-bs-toggle="tooltip" data-bs-title="${esc(note)}">i</span>`;
 }
 
-// Everything shown in the badges column, in display order.
-function playerBadges(p) {
+// Goalkeeper, penalty and injury badges — the badges column minus the note icon.
+function statusBadges(p) {
   return [
     rankBadge(p.gkRank, { label: 'P' }),
     rankBadge(p.penaltyRank, { label: 'rig', pill: true }),
     injuryBadge(p.injury),
-    noteIcon(p.note),
   ].join('');
+}
+
+// Everything shown in the badges column, in display order.
+function playerBadges(p) {
+  return statusBadges(p) + noteIcon(p.note);
 }
 
 function emptyRow(message, colspan = 5) {
@@ -792,6 +796,7 @@ function showSelected(p) {
   pickNote.className = selectedLabel.className;
   selectedLabel.innerHTML = `<span class="selected-name">${esc(p.name)}</span>
     <span class="selected-team">${esc(p.team)}</span>
+    <span id="selectedStatusBadges">${statusBadges(p)}</span>
     <span class="selected-badges">${roleBadges(p)}</span>`;
 
   if (p.note) {

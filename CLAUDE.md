@@ -56,7 +56,7 @@ Mantra role order for sorting is `ROLE_ORDER` in `auction.js` (`Por, Dd, Dc, Ds,
 
 ### Styling
 
-- Bootstrap 5.3 comes from a CDN. No Bootstrap Icons font is loaded, so icons are inlined as SVG strings in JS.
+- Bootstrap 5.3 comes from a CDN. `auction.html` also loads the Bootstrap Icons font (`<i class="bi bi-...">`), but most icons in `auction.js` are inlined as SVG strings.
 - `theme.css` holds the shared brand tokens (`--fcm-orange`) and the `.btn-orange` primary button. Link it on every page, before the page's own CSS.
 - Each page has its own stylesheet (`index.css`, `auction.css`).
 
