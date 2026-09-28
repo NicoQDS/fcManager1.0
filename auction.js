@@ -120,7 +120,7 @@ function emptyRow(message, colspan = 5) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
-// Tagged-players drawer row: core columns + Tier, then the same badges column as the main table.
+// Tagged-players drawer row: core columns plus Tit., badges, Tier and Max.
 function targetPlayerRow(p) {
   const classes = [
     String(p.id) === String(selectedId) ? 'selected-row' : '',
@@ -129,14 +129,14 @@ function targetPlayerRow(p) {
     .filter(Boolean)
     .join(' ');
   return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
-    <td>${roleBadges(p)}</td>
+    <td class="text-center">${roleBadges(p)}</td>
+    ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
     <td>${esc(p.name)}</td>
     <td>${esc(p.team)}</td>
-    <td class="text-end">${esc(p.qt)}</td>
-    ${showMaxPrice ? `<td class="text-end">${esc(p.maxPrice)}</td>` : ''}
-    ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
-    <td class="text-end">${esc(p.tier)}</td>
     ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
+    <td class="text-center">${esc(p.tier)}</td>
+    ${showMaxPrice ? `<td class="text-center">${esc(p.maxPrice)}</td>` : ''}
+    <td>${esc(p.qt)}</td>
   </tr>`;
 }
 
@@ -267,13 +267,9 @@ function render() {
     visible.sort((a, b) => comparators[sortKey](a, b, sortAsc));
   }
 
-  disposeTooltips(playerListBody);
   playerListBody.innerHTML =
     visible.length === 0 ? emptyRow('No players match the current filters.') : visible.map(playerRow).join('');
 }
-
-// Note tooltips (Bootstrap): delegated so re-rendered rows work without re-init.
-new bootstrap.Tooltip(playerListBody, { selector: '[data-bs-toggle="tooltip"]' });
 
 // Drop tooltips of rows about to be replaced, so none stay stuck on screen.
 function disposeTooltips(tbody) {
@@ -319,6 +315,7 @@ document.getElementById('rolesNone').addEventListener('click', () => {
 // --- Tagged players drawer: same filter/sort UX, own state, sold players never shown ---
 const targetRoleChecks = [...document.querySelectorAll('#targetRoleFilter .btn-check')];
 const targetPlayerListBody = document.getElementById('targetPlayerListBody');
+// Note tooltips (Bootstrap): delegated so re-rendered rows work without re-init.
 new bootstrap.Tooltip(targetPlayerListBody, { selector: '[data-bs-toggle="tooltip"]' });
 
 let targetSortKey = null;
