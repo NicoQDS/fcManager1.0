@@ -787,15 +787,15 @@ function showSelected(p) {
     pickNote.textContent = '';
     return;
   }
-  // The strip takes the colour of the first (main) role badge.
+  // The strip and the note take the colour of the first (main) role badge.
   selectedLabel.className = `pick-${esc((p.roles || [])[0] || '')}`;
+  pickNote.className = selectedLabel.className;
   selectedLabel.innerHTML = `<span class="selected-name">${esc(p.name)}</span>
     <span class="selected-team">${esc(p.team)}</span>
     <span class="selected-badges">${roleBadges(p)}</span>`;
 
   if (p.note) {
     pickNote.textContent = `${p.note} (${p.tier})`;
-    pickNote.style.color = p.target ? 'var(--fcm-orange)' : '#6c757d';
   } else {
     pickNote.textContent = '';
   }
@@ -931,7 +931,7 @@ function hydrateTeams() {
 }
 
 // Write the auction back: sessionStorage keeps this tab in sync on reload,
-// the server keeps the file in auctions/ current.
+// the server keeps the file in auctions_saved/ current.
 async function persist() {
   sessionStorage.setItem('fcmAuction', JSON.stringify(auction));
 

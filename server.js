@@ -8,7 +8,7 @@ const app = express();
 const PORT = 3000;
 
 // Folder where saved auctions live. Create it once at startup if missing.
-const AUCTIONS_DIR = path.join(__dirname, 'auctions');
+const AUCTIONS_DIR = path.join(__dirname, 'auctions_saved');
 fs.mkdirSync(AUCTIONS_DIR, { recursive: true });
 
 // Read JSON request bodies into req.body automatically.

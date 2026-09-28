@@ -816,18 +816,18 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 /* Strip colour follows the first role badge — same groups as .role-* above. */
-#selectedPlayer.pick-Por { --pick: var(--role-por); }
-#selectedPlayer.pick-Dd,
-#selectedPlayer.pick-Dc,
-#selectedPlayer.pick-Ds,
-#selectedPlayer.pick-B { --pick: var(--role-def); }
-#selectedPlayer.pick-E,
-#selectedPlayer.pick-M,
-#selectedPlayer.pick-C { --pick: var(--role-mid); }
-#selectedPlayer.pick-W,
-#selectedPlayer.pick-T { --pick: var(--role-treq); }
-#selectedPlayer.pick-A,
-#selectedPlayer.pick-Pc { --pick: var(--role-att); }
+:is(#selectedPlayer, #pickNote).pick-Por { --pick: var(--role-por); }
+:is(#selectedPlayer, #pickNote).pick-Dd,
+:is(#selectedPlayer, #pickNote).pick-Dc,
+:is(#selectedPlayer, #pickNote).pick-Ds,
+:is(#selectedPlayer, #pickNote).pick-B { --pick: var(--role-def); }
+:is(#selectedPlayer, #pickNote).pick-E,
+:is(#selectedPlayer, #pickNote).pick-M,
+:is(#selectedPlayer, #pickNote).pick-C { --pick: var(--role-mid); }
+:is(#selectedPlayer, #pickNote).pick-W,
+:is(#selectedPlayer, #pickNote).pick-T { --pick: var(--role-treq); }
+:is(#selectedPlayer, #pickNote).pick-A,
+:is(#selectedPlayer, #pickNote).pick-Pc { --pick: var(--role-att); }
 
 #selectedPlayer.is-empty {
   border-left-color: #ced4da;
@@ -874,8 +874,11 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 /* Long notes wrap instead of widening the column: width 0 keeps the text out
-   of the zone's content-sized width, min-width 100% fills what's there. */
+   of the zone's content-sized width, min-width 100% fills what's there.
+   Same darkened role colour as the selected name above it. */
 #pickNote {
+  --pick: var(--fcm-orange); /* fallback: player with no role */
+  color: color-mix(in srgb, var(--pick) 82%, #000);
   width: 0;
   min-width: 100%;
   overflow-wrap: anywhere;
