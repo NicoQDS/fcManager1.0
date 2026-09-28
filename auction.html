@@ -417,6 +417,20 @@
         </button>
         <div id="scoutDrawerHead">My notes</div>
         <div id="myNotesDrawerBody">
+          <!-- Panel search: picking a hit scrolls it to the top of the table. -->
+          <div id="targetSearchWrap">
+            <input
+              type="search"
+              id="targetPlayerSearch"
+              class="form-control form-control-sm"
+              placeholder="Search tagged player…"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="targetSearchResults"
+            />
+            <ul id="targetSearchResults" role="listbox" hidden></ul>
+          </div>
           <div id="targetRoleFilterActions">
             <button
               type="button"

@@ -854,12 +854,13 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   font-size: 0.85rem;
 }
 
-/* Goalkeeper, penalty and injury badges right after the team, in the
+/* Titolarità, then goalkeeper, penalty and injury badges right after the team, in the
    badges column's order (P, rig, !). */
 #selectedStatusBadges {
   display: inline-flex;
   gap: 0.2rem;
   align-self: center;
+  font-size: 0.9em; /* Bootstrap badges size in em: 10% smaller than elsewhere */
 }
 
 /* Badges hug the right edge, clear of the name. */
@@ -870,8 +871,12 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   align-self: center;
 }
 
+/* Role badges 10% smaller than the base .role-badge (sized in rem). */
 #selectedPlayer .role-badge {
   margin-right: 0;
+  padding: 0.09rem 0.315rem;
+  border-radius: 0.27rem;
+  font-size: 0.63rem;
 }
 
 /* Assign feedback — empty string collapses the line, so nothing jumps. */
@@ -900,12 +905,14 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   color: #198754;
 }
 
-/* Type-ahead dropdown — floats over the table, anchored to the search box. */
-#searchWrap {
+/* Type-ahead dropdown — floats over the table, anchored to the search box.
+   Shared by the main search and the panel search. */
+#searchWrap,
+#targetSearchWrap {
   position: relative;
 }
 
-#searchResults {
+:is(#searchResults, #targetSearchResults) {
   position: absolute;
   top: calc(100% + 0.2rem);
   left: 0;
@@ -920,7 +927,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
 }
 
-#searchResults li {
+:is(#searchResults, #targetSearchResults) li {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -929,12 +936,12 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   font-size: 0.9rem;
 }
 
-#searchResults li:hover,
-#searchResults li.active {
+:is(#searchResults, #targetSearchResults) li:hover,
+:is(#searchResults, #targetSearchResults) li.active {
   background: #f1f3f5;
 }
 
-#searchResults .hit-name {
+:is(#searchResults, #targetSearchResults) .hit-name {
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -942,25 +949,25 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 /* Team sits between name and badges; badges hug the right edge. */
-#searchResults .hit-team {
+:is(#searchResults, #targetSearchResults) .hit-team {
   color: #6c757d;
   font-size: 0.8rem;
   white-space: nowrap;
 }
 
-#searchResults .hit-roles {
+:is(#searchResults, #targetSearchResults) .hit-roles {
   margin-left: auto;
   white-space: nowrap;
 }
 
 /* Sold hits: dimmed and struck, with the buying team spelled out. */
-#searchResults li.hit-is-sold .hit-name,
-#searchResults li.hit-is-sold .hit-team {
+:is(#searchResults, #targetSearchResults) li.hit-is-sold .hit-name,
+:is(#searchResults, #targetSearchResults) li.hit-is-sold .hit-team {
   opacity: 0.55;
   text-decoration: line-through;
 }
 
-#searchResults .hit-sold {
+:is(#searchResults, #targetSearchResults) .hit-sold {
   margin-left: 0.3rem;
   padding: 0.1rem 0.35rem;
   border-radius: 0.3rem;
@@ -1056,7 +1063,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   position: fixed;
   top: 0;
   right: 0;
-  width: 40vw;
+  width: 33.3333vw;
   height: 100vh;
   z-index: 30;
   pointer-events: none; /* only the tab + inner panel should catch clicks */
@@ -1101,7 +1108,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 #scoutDrawerInner {
   position: relative; /* anchors the tab's absolute offset */
   pointer-events: auto;
-  width: 40vw;
+  width: 33.3333vw;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1214,6 +1221,11 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 /* Tagged-players table — same look as the main role filter + player list,
    scoped under target* ids so it runs independent filter/sort state. */
+#targetSearchWrap {
+  flex: 0 0 auto;
+  margin-bottom: 0.5rem;
+}
+
 #targetRoleFilterActions {
   flex: 0 0 auto;
   display: flex;

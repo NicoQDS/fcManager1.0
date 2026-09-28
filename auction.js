@@ -316,7 +316,7 @@ document.getElementById('rolesNone').addEventListener('click', () => {
   render();
 });
 
-// --- Tagged players drawer: same filter/sort UX, own state, sold players never shown ---
+// --- Players drawer: same filter/sort UX, own state, sold players never shown ---
 const targetRoleChecks = [...document.querySelectorAll('#targetRoleFilter .btn-check')];
 const targetPlayerListBody = document.getElementById('targetPlayerListBody');
 // Note tooltips (Bootstrap): delegated so re-rendered rows work without re-init.
@@ -339,11 +339,19 @@ function targetSelectedRoles() {
   return new Set(targetRoleChecks.filter((c) => c.checked).map((c) => c.value));
 }
 
-function renderTargetList() {
+// Every unsold player, tagged or not: what the panel search looks through.
+function targetPoolPlayers() {
+  return allPlayers.filter((p) => !p.soldTo);
+}
+
+// Players the panel table shows right now: the pool narrowed by the role filter.
+function targetListPlayers() {
   const roles = targetSelectedRoles();
-  const tagged = allPlayers.filter(
-    (p) => (p.tier || p.target || p.note) && matchesRoles(p, roles) && !p.soldTo
-  );
+  return targetPoolPlayers().filter((p) => matchesRoles(p, roles));
+}
+
+function renderTargetList() {
+  const tagged = targetListPlayers();
 
   if (targetSortKey) {
     tagged.sort((a, b) => comparators[targetSortKey](a, b, targetSortAsc));
@@ -352,7 +360,7 @@ function renderTargetList() {
   disposeTooltips(targetPlayerListBody);
   targetPlayerListBody.innerHTML =
     tagged.length === 0
-      ? emptyRow('No tagged players match the current filters.', 5 + showBadges + showMaxPrice + showStarter)
+      ? emptyRow('No players match the current filters.', 5 + showBadges + showMaxPrice + showStarter)
       : tagged.map(targetPlayerRow).join('');
 }
 
@@ -388,8 +396,7 @@ document.getElementById('targetRolesNone').addEventListener('click', () => {
 // the sticky header.
 const targetPlayerListWrap = document.getElementById('targetPlayerListTableWrap');
 const targetPlayerListHead = targetPlayerListWrap.querySelector('thead');
-document.getElementById('targetRolesExpand').addEventListener('click', () => {
-  const row = targetPlayerListBody.querySelector('.selected-row');
+function scrollTargetRowToTop(row) {
   if (!row) {
     return;
   }
@@ -397,6 +404,10 @@ document.getElementById('targetRolesExpand').addEventListener('click', () => {
     row.getBoundingClientRect().top -
     targetPlayerListWrap.getBoundingClientRect().top -
     targetPlayerListHead.offsetHeight;
+}
+
+document.getElementById('targetRolesExpand').addEventListener('click', () => {
+  scrollTargetRowToTop(targetPlayerListBody.querySelector('.selected-row'));
 });
 
 // --- Teams sidebar ---
@@ -709,8 +720,6 @@ const selectedLabel = document.getElementById('selectedPlayer');
 const pickNote = document.getElementById('pickNote');
 
 const MAX_HITS = 5;
-let hits = []; // players currently listed in the dropdown
-let activeHit = -1; // keyboard cursor into hits
 
 // Fold accents and case so "jose" matches "José".
 function norm(v) {
@@ -721,15 +730,11 @@ function norm(v) {
 }
 
 // Names starting with the query rank above names merely containing it;
-// within each group the pricier player (Qt.A M) comes first. Sold players
-// follow the table: listed only while "Sold" is checked.
-function searchPlayers(query) {
+// within each group the pricier player (Qt.A M) comes first.
+function searchPlayers(query, pool) {
   const q = norm(query);
   const scored = [];
-  for (const p of allPlayers) {
-    if (p.soldTo && !showSold.checked) {
-      continue;
-    }
+  for (const p of pool) {
     const at = norm(p.name).indexOf(q);
     if (at !== -1) {
       scored.push({ p, starts: at === 0 ? 0 : 1 });
@@ -739,18 +744,24 @@ function searchPlayers(query) {
   return scored.slice(0, MAX_HITS).map((s) => s.p);
 }
 
-function closeResults() {
-  hits = [];
-  activeHit = -1;
-  searchResults.hidden = true;
-  searchResults.innerHTML = '';
-  searchInput.setAttribute('aria-expanded', 'false');
-}
+// Type-ahead dropdown on a search box. pool() returns the players it may
+// list; onPick(p) runs when one is chosen by click or Enter. Each box keeps
+// its own hits and keyboard cursor. Returns { close } to shut the list.
+function attachSearch({ input, list, wrap, pool, onPick }) {
+  let hits = []; // players currently listed in the dropdown
+  let activeHit = -1; // keyboard cursor into hits
 
-function renderResults() {
-  searchResults.innerHTML = hits
-    .map(
-      (p, i) => {
+  function close() {
+    hits = [];
+    activeHit = -1;
+    list.hidden = true;
+    list.innerHTML = '';
+    input.setAttribute('aria-expanded', 'false');
+  }
+
+  function renderHits() {
+    list.innerHTML = hits
+      .map((p, i) => {
         // Sold hits stay listed so you can look a player up, but they are
         // marked and refused on click, same as their row in the table.
         const classes = [i === activeHit ? 'active' : '', p.soldTo ? 'hit-is-sold' : '']
@@ -763,19 +774,62 @@ function renderResults() {
           p.soldTo ? `<span class="hit-sold">${esc(p.soldTo)}</span>` : ''
         }</span>
       </li>`;
-      }
-    )
-    .join('');
-  searchResults.hidden = false;
-  searchInput.setAttribute('aria-expanded', 'true');
-}
-
-function moveActive(step) {
-  if (hits.length === 0) {
-    return;
+      })
+      .join('');
+    list.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
   }
-  activeHit = (activeHit + step + hits.length) % hits.length;
-  renderResults();
+
+  function move(step) {
+    if (hits.length === 0) {
+      return;
+    }
+    activeHit = (activeHit + step + hits.length) % hits.length;
+    renderHits();
+  }
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    hits = q === '' ? [] : searchPlayers(q, pool());
+    activeHit = hits.length > 0 ? 0 : -1;
+    if (hits.length === 0) {
+      close();
+      return;
+    }
+    renderHits();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      move(1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      move(-1);
+    } else if (e.key === 'Enter' && activeHit >= 0) {
+      e.preventDefault();
+      onPick(hits[activeHit]);
+    } else if (e.key === 'Escape') {
+      close();
+    }
+  });
+
+  // mousedown, not click: fires before the input's blur closes the list.
+  list.addEventListener('mousedown', (e) => {
+    const li = e.target.closest('li[data-index]');
+    if (li) {
+      e.preventDefault();
+      onPick(hits[Number(li.dataset.index)]);
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) {
+      close();
+    }
+  });
+
+  return { close };
 }
 
 // Pick a player: label it, mark its row, and (when coming from the search box)
@@ -796,7 +850,7 @@ function showSelected(p) {
   pickNote.className = selectedLabel.className;
   selectedLabel.innerHTML = `<span class="selected-name">${esc(p.name)}</span>
     <span class="selected-team">${esc(p.team)}</span>
-    <span id="selectedStatusBadges">${statusBadges(p)}</span>
+    <span id="selectedStatusBadges">${starterBadge(p.starter)}${statusBadges(p)}</span>
     <span class="selected-badges">${roleBadges(p)}</span>`;
 
   if (p.note) {
@@ -816,7 +870,7 @@ function selectPlayer(p, { scroll = false } = {}) {
   showSelected(p);
   assignPrice.value = '1'; // opening bid — typing over it is one keystroke
   searchInput.value = '';
-  closeResults();
+  mainSearch.close();
   render();
   renderTargetList();
   if (scroll) {
@@ -843,56 +897,46 @@ function clearSelection() {
   assignPrice.value = '';
   searchInput.value = '';
   message('');
-  closeResults();
+  mainSearch.close();
   render();
   renderTargetList();
 }
 
 document.getElementById('resetBtn').addEventListener('click', clearSelection);
 
-searchInput.addEventListener('input', () => {
-  const q = searchInput.value.trim();
-  if (q === '') {
-    closeResults();
-    return;
-  }
-  hits = searchPlayers(q);
-  activeHit = hits.length > 0 ? 0 : -1;
-  if (hits.length === 0) {
-    closeResults();
-    return;
-  }
-  renderResults();
+// Main search: picks the player for the sale. Sold players follow the
+// table — listed only while "Sold" is checked.
+const mainSearch = attachSearch({
+  input: searchInput,
+  list: searchResults,
+  wrap: document.getElementById('searchWrap'),
+  pool: () => allPlayers.filter((p) => !p.soldTo || showSold.checked),
+  onPick: (p) => selectPlayer(p, { scroll: true }),
 });
 
-searchInput.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    moveActive(1);
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    moveActive(-1);
-  } else if (e.key === 'Enter' && activeHit >= 0) {
-    e.preventDefault();
-    selectPlayer(hits[activeHit], { scroll: true });
-  } else if (e.key === 'Escape') {
-    closeResults();
-  }
-});
-
-// mousedown, not click: fires before the input's blur closes the list.
-searchResults.addEventListener('mousedown', (e) => {
-  const li = e.target.closest('li[data-index]');
-  if (li) {
-    e.preventDefault();
-    selectPlayer(hits[Number(li.dataset.index)], { scroll: true });
-  }
-});
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#searchWrap')) {
-    closeResults();
-  }
+// Panel search: every unsold player, whatever the role filter. Picking one
+// scrolls the table so that player is the first row; when the role filter
+// hides them, it is cleared first. The current sale pick is untouched.
+const targetSearchInput = document.getElementById('targetPlayerSearch');
+const targetSearch = attachSearch({
+  input: targetSearchInput,
+  list: document.getElementById('targetSearchResults'),
+  wrap: document.getElementById('targetSearchWrap'),
+  pool: targetPoolPlayers,
+  onPick: (p) => {
+    targetSearchInput.value = '';
+    targetSearch.close();
+    if (!targetListPlayers().includes(p)) {
+      targetRoleChecks.forEach((c) => {
+        c.checked = true;
+      });
+      renderTargetList();
+    }
+    const row = [...targetPlayerListBody.querySelectorAll('tr[data-id]')].find(
+      (tr) => tr.dataset.id === String(p.id)
+    );
+    scrollTargetRowToTop(row);
+  },
 });
 
 // --- Assign a player to a team ---
@@ -1090,8 +1134,4 @@ if (!auction) {
   renderTargetList();
   renderTeams();
   renderLog();
-
-  // No scouting data anywhere in this file — the drawer has nothing to show.
-  const hasScoutingData = allPlayers.some((p) => p.tier || p.target || p.note);
-  scoutDrawer.hidden = !hasScoutingData;
 }
