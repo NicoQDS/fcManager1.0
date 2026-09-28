@@ -83,19 +83,36 @@ function rankBadge(rank, { label, pill = false } = {}) {
   return ` <span class="${shape} ${color}">${esc(label ?? rank)}</span>`;
 }
 
-// 1 light (goalkeeper-line yellow), 2 medium (orange), 3 severe (attack-line red).
-const INJURY_COLORS = {
-  1: 'badge-por',
-  2: 'injury-medium',
-  3: 'badge-att',
-};
+// Goalkeeper order: the rank in an outlined circle, no badge, coloured by rank
+// (see .gk-rank-*). Drawn as inline SVG, not a Bootstrap Icons glyph, so the
+// line width is a plain CSS value (.gk-rank-icon circle / text in auction.css).
+// A ballottaggio or anything that is not 0–9 keeps the plain rank badge.
+function gkRankIcon(rank) {
+  const n = Number(String(rank ?? '').trim());
+  if (!rank || !Number.isInteger(n) || n < 0 || n > 9) {
+    return rankBadge(rank);
+  }
+  return `<svg class="gk-rank-icon gk-rank-${n}" viewBox="0 0 16 16" width="1em" height="1em" role="img">
+    <title>Gerarchia portiere ${n}</title>
+    <circle cx="8" cy="8" r="7.5" fill="none" stroke="currentColor" />
+    <text x="8" y="8" text-anchor="middle" dominant-baseline="central" fill="currentColor">${n}</text>
+  </svg>`;
+}
 
-function injuryBadge(level) {
-  const color = INJURY_COLORS[level];
-  if (!color) {
+// Penalty order as a filled rank pill reading "+2" (the bonus for a scored
+// penalty): 1 green, 2 yellow, 3 red, anything else light grey. A ballottaggio
+// keeps its arrow badge.
+function penaltyIcon(rank) {
+  return rankBadge(rank, { label: isBallottaggio(rank) ? undefined : '+2', pill: true });
+}
+
+// Injury as a bare exclamation-circle-fill icon, sized like the goalkeeper circle and coloured by
+// level (see .injury-icon-*): 1 light yellow, 2 medium orange, 3 severe red.
+function injuryIcon(level) {
+  if (![1, 2, 3].includes(Number(level))) {
     return '';
   }
-  return ` <span class="badge rounded-pill fw-normal ${color}" title="Infortunio ${level}">!</span>`;
+  return `<i class="bi bi-exclamation-circle-fill injury-icon injury-icon-${Number(level)}" title="Infortunio ${Number(level)}"></i>`;
 }
 
 // Info icon beside the name when the player has a note; hover shows the note in a Bootstrap tooltip.
@@ -103,37 +120,38 @@ function noteIcon(note) {
   if (!String(note ?? '').trim()) {
     return '';
   }
-  return ` <span class="badge rounded-pill fw-normal note-badge" data-bs-toggle="tooltip" data-bs-title="${esc(note)}">i</span>`;
+  return `<i class="bi bi-info-circle note-icon" data-bs-toggle="tooltip" data-bs-title="${esc(note)}"></i>`;
 }
 
 // Goalkeeper, penalty and injury badges — the badges column minus the note icon.
 function statusBadges(p) {
   return [
-    rankBadge(p.gkRank, { label: 'P' }),
-    rankBadge(p.penaltyRank, { label: 'rig', pill: true }),
-    injuryBadge(p.injury),
+    gkRankIcon(p.gkRank),
+    penaltyIcon(p.penaltyRank),
+    injuryIcon(p.injury),
   ].join('');
 }
 
 const isBallottaggio = (rank) => String(rank ?? '').trim().toLowerCase() === 'ballottaggio';
 
-// Everything shown in the panel's badges column, in display order. Penalty
-// order has its own "Rig." column and ballottaggio ranks their own "50-50" one.
+// Everything shown in the panel's badges column. Goalkeeper order and injury sit
+// beside the name; penalty order and ballottaggio have their own columns.
 function playerBadges(p) {
-  return [
-    isBallottaggio(p.gkRank) ? '' : rankBadge(p.gkRank, { label: 'P' }),
-    injuryBadge(p.injury),
-    noteIcon(p.note),
-  ].join('');
+  return noteIcon(p.note);
 }
 
-// Panel "Rig." column: the penalty-order pill (a ballottaggio goes to "50-50").
+// Panel name cell: goalkeeper-order numbered circle right of the name (a ballottaggio shows its arrow badge instead).
+function gkBadge(p) {
+  return isBallottaggio(p.gkRank) ? '' : gkRankIcon(p.gkRank);
+}
+
+// Panel "Rig." column: the penalty-order "+2" pill (a ballottaggio shows its arrow badge by the name).
 function penaltyBadge(p) {
-  return isBallottaggio(p.penaltyRank) ? '' : rankBadge(p.penaltyRank, { label: 'rig', pill: true });
+  return isBallottaggio(p.penaltyRank) ? '' : penaltyIcon(p.penaltyRank);
 }
 
-// Panel "50-50" column: the ballottaggio arrow-down-up icon for the goalkeeper
-// hierarchy (square) and/or the penalty order (pill).
+// Panel name cell: the ballottaggio arrow-down-up badge for the goalkeeper
+// hierarchy (square) and/or the penalty order (pill), right after the name.
 function ballottaggioBadges(p) {
   return [
     isBallottaggio(p.gkRank) ? rankBadge(p.gkRank) : '',
@@ -145,7 +163,16 @@ function emptyRow(message, colspan = 5) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
-// Players drawer row: core columns plus Tit., Rig., badges, 50-50, Tier and Max.
+// Panel Tier cell: the tier number inside a thin circle, in the text colour.
+function tierCircle(p) {
+  const tier = String(p.tier ?? '').trim();
+  if (tier === '') {
+    return '';
+  }
+  return `<span id="targetTier-${esc(p.id)}" class="tier-circle">${esc(tier)}</span>`;
+}
+
+// Players drawer row: Roles, Rig., Tit., Name, Team, Tier, Max, fM, then badges last.
 function targetPlayerRow(p) {
   const classes = [
     String(p.id) === String(selectedId) ? 'selected-row' : '',
@@ -154,16 +181,15 @@ function targetPlayerRow(p) {
     .filter(Boolean)
     .join(' ');
   return `<tr data-id="${esc(p.id)}"${classes ? ` class="${classes}"` : ''}>
-    <td class="text-center">${roleBadges(p)}</td>
-    ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
-    <td>${esc(p.name)}</td>
-    <td>${esc(p.team)}</td>
+    <td class="text-end">${roleBadges(p)}</td>
     ${showPenalty ? `<td class="text-center text-nowrap">${penaltyBadge(p)}</td>` : ''}
-    ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
-    ${showBallottaggio ? `<td class="text-center text-nowrap">${ballottaggioBadges(p)}</td>` : ''}
-    <td class="text-center">${esc(p.tier)}</td>
+    ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
+    <td><span id="targetName-${esc(p.id)}" class="target-name">${esc(p.name)}${gkBadge(p)}${ballottaggioBadges(p)}${injuryIcon(p.injury)}</span></td>
+    <td>${esc(p.team)}</td>
+    <td class="text-center">${tierCircle(p)}</td>
     ${showMaxPrice ? `<td class="text-center">${esc(p.maxPrice)}</td>` : ''}
     <td>${esc(p.qt)}</td>
+    ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
   </tr>`;
 }
 
@@ -285,7 +311,6 @@ let allPlayers = [];
 let showStarter = false; // true when the file carries any "Titolarità" value
 let showPenalty = false; // true when any player has a penalty order (not ballottaggio)
 let showBadges = false; // true when any player has something for the badges column
-let showBallottaggio = false; // true when any player is in a ballottaggio (goalkeeper or penalty)
 let showMaxPrice = false; // true when the file carries any "Prezzo massimo" value
 let sortKey = null;
 let sortAsc = true;
@@ -407,7 +432,7 @@ function renderTargetList() {
   disposeTooltips(targetPlayerListBody);
   targetPlayerListBody.innerHTML =
     tagged.length === 0
-      ? emptyRow('No players match the current filters.', 5 + showPenalty + showBadges + showBallottaggio + showMaxPrice + showStarter)
+      ? emptyRow('No players match the current filters.', 5 + showPenalty + showBadges + showMaxPrice + showStarter)
       : tagged.map(targetPlayerRow).join('');
 }
 
@@ -1162,8 +1187,6 @@ if (!auction) {
   document.getElementById('targetPenaltyHeader').hidden = !showPenalty;
   showBadges = allPlayers.some((p) => playerBadges(p) !== '');
   document.getElementById('targetBadgesHeader').hidden = !showBadges;
-  showBallottaggio = allPlayers.some((p) => ballottaggioBadges(p) !== '');
-  document.getElementById('targetBallottaggioHeader').hidden = !showBallottaggio;
   showMaxPrice = allPlayers.some((p) => p.maxPrice !== '' && p.maxPrice != null);
   document.getElementById('targetSortMaxPrice').hidden = !showMaxPrice;
   auction.log = auction.log || []; // older auction files have no log yet

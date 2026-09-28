@@ -211,11 +211,6 @@ body {
   color: #fff;
 }
 
-.injury-medium {
-  background-color: var(--fcm-orange);
-  color: #fff;
-}
-
 /* Rank-1 badges beside the name: same green as the defensive role badges (Dc, Ds, Dd, B). */
 .badge-def {
   background-color: var(--role-def);
@@ -237,11 +232,77 @@ body {
   color: #fff;
 }
 
-/* Ballottaggio icon: the font glyph's thin strokes thickened with an outline.
-   Also in the panel's 50-50 heading, where it keeps the heading's text colour. */
-.badge .bi-arrow-down-up,
-#targetBallottaggioHeader .bi-arrow-down-up {
+/* Ballottaggio icon: the font glyph's thin strokes thickened with an outline. */
+.badge .bi-arrow-down-up {
   -webkit-text-stroke: 0.6px currentColor;
+}
+
+/* Goalkeeper-order numbered circle, no badge: as tall as a badge (0.75em text
+   + 0.35em padding top and bottom + 1px borders), the circle's line coloured by
+   rank like the rank badges — 1 green, 2 yellow, 3 red, anything higher grey. */
+.gk-rank-icon,
+.injury-icon,
+.note-icon {
+  display: inline-block;
+  font-size: calc(1.275em + 2px); /* 0.75em × (1 + 2 × 0.35) + 2 × 1px border */
+  line-height: 1;
+  color: #adb5bd;
+}
+
+/* Bootstrap Icons nudges every glyph down 0.125em; as a block the glyph fills
+   the icon box exactly, so centring the box centres the circle. */
+.gk-rank-icon::before,
+.injury-icon::before,
+.note-icon::before {
+  display: block;
+}
+
+/* Goalkeeper circle line weights, in the SVG's 16-unit box (1 unit ≈ 1.25px at
+   this size). Bootstrap's own circle line is 1 unit; lower = thinner.
+   The circle's radius (7.5) keeps a line up to 1 unit inside the box. */
+.gk-rank-icon circle {
+  stroke-width: 0.75;
+}
+
+/* The digit: size in box units, weight like any font (400 regular, 600 semi-bold). */
+.gk-rank-icon text {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.gk-rank-1 { color: var(--role-def); }
+.gk-rank-2 { color: var(--role-por); }
+.gk-rank-3 { color: var(--role-att); }
+
+/* Injury exclamation circle: same size as the goalkeeper circle, coloured by level. */
+.injury-icon-1 { color: var(--role-por); }
+.injury-icon-2 { color: var(--fcm-orange); }
+.injury-icon-3 { color: var(--role-att); }
+
+/* Panel name cell: name and goalkeeper icon in a flex row, so the icon is
+   centred on the name's line box; icon 5px after the name. */
+#targetPlayerListBody .target-name {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Tier number in a circle as tall as a badge, line and number in the text colour. */
+#targetPlayerListBody .tier-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(1.275em + 2px);
+  height: calc(1.275em + 2px);
+  padding: 0 0.2em; /* two-digit tiers stretch it into a pill */
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+#targetPlayerListBody .gk-rank-icon,
+#targetPlayerListBody .injury-icon,
+#targetPlayerListBody .target-name > .badge {
+  margin-left: 5px;
 }
 
 /* Red badges beside the name: same red as the attack role badges (A, Pc). */
@@ -252,10 +313,9 @@ body {
 }
 
 /* Note info pill: same shape as the injury "!" pill, dark grey outline, no fill. */
-.note-badge {
-  background-color: transparent;
-  border: 1px solid var(--bs-gray-700);
-  color: var(--bs-gray-700);
+/* Note: bare info-circle icon, same size as the goalkeeper/injury icons. */
+.note-icon {
+  color: var(--bs-gray-600); /* #343a40 */
 }
 
 /* Official mantra line colors (used by badges AND role filter buttons). */
@@ -862,10 +922,12 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 /* Titolarità, then goalkeeper, penalty and injury badges right after the team, in the
-   badges column's order (P, rig, !). */
+   badges column's order (P, rig, injury). */
 #selectedStatusBadges {
   display: inline-flex;
+  align-items: center;
   gap: 0.2rem;
+  margin-left: calc(40px - 0.45rem); /* + the strip's 0.45rem gap = 40px after the team */
   align-self: center;
   font-size: 0.9em; /* Bootstrap badges size in em: 10% smaller than elsewhere */
 }
@@ -876,14 +938,19 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   display: flex;
   gap: 0.2rem;
   align-self: center;
+  font-size: 0.9em; /* same base as #selectedStatusBadges */
 }
 
-/* Role badges 10% smaller than the base .role-badge (sized in rem). */
+/* Role badges built like a Bootstrap .badge (0.75em text, line-height 1, 0.35em
+   padding, 1px border) so they are exactly as tall as the titolarità badge and
+   the goalkeeper/injury icons beside them. */
 #selectedPlayer .role-badge {
   margin-right: 0;
-  padding: 0.09rem 0.315rem;
+  padding: 0.35em 0.5em;
+  border: 1px solid transparent;
   border-radius: 0.27rem;
-  font-size: 0.63rem;
+  font-size: 0.75em;
+  line-height: 1;
 }
 
 /* Assign feedback — empty string collapses the line, so nothing jumps. */
@@ -1070,7 +1137,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   position: fixed;
   top: 0;
   right: 0;
-  width: 33.3333vw;
+  width: 35vw;
   height: 100vh;
   z-index: 30;
   pointer-events: none; /* only the tab + inner panel should catch clicks */
@@ -1115,7 +1182,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 #scoutDrawerInner {
   position: relative; /* anchors the tab's absolute offset */
   pointer-events: auto;
-  width: 33.3333vw;
+  width: 35vw;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -1321,11 +1388,12 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 
 #targetPlayerListTableWrap tbody td {
   white-space: nowrap;
+  vertical-align: middle; /* every cell centred, whatever the tallest one */
 }
 
-/* Every other column hugs its longest cell (width: 1% + nowrap); fM takes
-   whatever width is left over. */
-#targetPlayerListTableWrap thead th#targetSortQt {
+/* Every other column hugs its longest cell (width: 1% + nowrap); the badges
+   column (last) takes whatever width is left over. */
+#targetPlayerListTableWrap thead th#targetBadgesHeader {
   width: auto;
 }
 
