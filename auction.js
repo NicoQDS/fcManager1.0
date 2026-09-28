@@ -62,7 +62,7 @@ function starterBadge(pct) {
 }
 
 // Pecking-order badge beside the name, shared by "Gerarchia portiere" and "Rigorista" (1–5 or "ballottaggio").
-// 1 defence-line green, 2 goalkeeper-line yellow, 3 attack-line red, anything else light grey; ballottaggio becomes a midfield-blue swap icon.
+// 1 defence-line green, 2 goalkeeper-line yellow, 3 attack-line red, anything else light grey; ballottaggio becomes a midfield-blue arrow-down-up icon.
 const RANK_COLORS = {
   1: 'badge-def',
   2: 'badge-por',
@@ -77,7 +77,7 @@ function rankBadge(rank, { label, pill = false } = {}) {
   }
   const shape = pill ? 'badge rounded-pill fw-normal' : 'badge fw-normal';
   if (rank.toLowerCase() === 'ballottaggio') {
-    return ` <span class="${shape} badge-mid" title="Ballottaggio"><i class="bi bi-arrow-repeat"></i></span>`;
+    return ` <span class="${shape} badge-mid" title="Ballottaggio"><i class="bi bi-arrow-down-up"></i></span>`;
   }
   const color = RANK_COLORS[rank] || 'text-bg-light border';
   return ` <span class="${shape} ${color}">${esc(label ?? rank)}</span>`;
@@ -115,16 +115,37 @@ function statusBadges(p) {
   ].join('');
 }
 
-// Everything shown in the badges column, in display order.
+const isBallottaggio = (rank) => String(rank ?? '').trim().toLowerCase() === 'ballottaggio';
+
+// Everything shown in the panel's badges column, in display order. Penalty
+// order has its own "Rig." column and ballottaggio ranks their own "50-50" one.
 function playerBadges(p) {
-  return statusBadges(p) + noteIcon(p.note);
+  return [
+    isBallottaggio(p.gkRank) ? '' : rankBadge(p.gkRank, { label: 'P' }),
+    injuryBadge(p.injury),
+    noteIcon(p.note),
+  ].join('');
+}
+
+// Panel "Rig." column: the penalty-order pill (a ballottaggio goes to "50-50").
+function penaltyBadge(p) {
+  return isBallottaggio(p.penaltyRank) ? '' : rankBadge(p.penaltyRank, { label: 'rig', pill: true });
+}
+
+// Panel "50-50" column: the ballottaggio arrow-down-up icon for the goalkeeper
+// hierarchy (square) and/or the penalty order (pill).
+function ballottaggioBadges(p) {
+  return [
+    isBallottaggio(p.gkRank) ? rankBadge(p.gkRank) : '',
+    isBallottaggio(p.penaltyRank) ? rankBadge(p.penaltyRank, { pill: true }) : '',
+  ].join('');
 }
 
 function emptyRow(message, colspan = 5) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
 
-// Tagged-players drawer row: core columns plus Tit., badges, Tier and Max.
+// Players drawer row: core columns plus Tit., Rig., badges, 50-50, Tier and Max.
 function targetPlayerRow(p) {
   const classes = [
     String(p.id) === String(selectedId) ? 'selected-row' : '',
@@ -137,7 +158,9 @@ function targetPlayerRow(p) {
     ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
     <td>${esc(p.name)}</td>
     <td>${esc(p.team)}</td>
+    ${showPenalty ? `<td class="text-center text-nowrap">${penaltyBadge(p)}</td>` : ''}
     ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
+    ${showBallottaggio ? `<td class="text-center text-nowrap">${ballottaggioBadges(p)}</td>` : ''}
     <td class="text-center">${esc(p.tier)}</td>
     ${showMaxPrice ? `<td class="text-center">${esc(p.maxPrice)}</td>` : ''}
     <td>${esc(p.qt)}</td>
@@ -206,6 +229,27 @@ const comparators = {
     const f = num(b.fvm) - num(a.fvm);
     return f !== 0 ? f : byName(a, b);
   },
+  // Rigorista, first click rank 1 first; no rank or ballottaggio (it has the
+  // 50-50 column) always last. Ties → Qt.A M desc → Titolarità desc → FVM desc
+  // → name asc, regardless of direction.
+  penalty: (a, b, asc) => {
+    const rank = (p) => (isBallottaggio(p.penaltyRank) ? NaN : parseFloat(p.penaltyRank));
+    const ra = rank(a);
+    const rb = rank(b);
+    const ea = Number.isNaN(ra);
+    const eb = Number.isNaN(rb);
+    if (ea !== eb) return ea ? 1 : -1;
+    if (!ea) {
+      const r = dir(ra - rb, asc);
+      if (r !== 0) return r;
+    }
+    const q = byQtDesc(a, b);
+    if (q !== 0) return q;
+    const s = byStarterDesc(a, b);
+    if (s !== 0) return s;
+    const f = num(b.fvm) - num(a.fvm);
+    return f !== 0 ? f : byName(a, b);
+  },
   // Titolarità, first click highest first; players without a value always last.
   // Ties → Qt.A M desc → FVM desc → name asc, regardless of Titolarità direction.
   starter: (a, b, asc) => {
@@ -239,7 +283,9 @@ const roleChecks = [...document.querySelectorAll('#roleFilter .btn-check')];
 
 let allPlayers = [];
 let showStarter = false; // true when the file carries any "Titolarità" value
+let showPenalty = false; // true when any player has a penalty order (not ballottaggio)
 let showBadges = false; // true when any player has something for the badges column
+let showBallottaggio = false; // true when any player is in a ballottaggio (goalkeeper or penalty)
 let showMaxPrice = false; // true when the file carries any "Prezzo massimo" value
 let sortKey = null;
 let sortAsc = true;
@@ -333,6 +379,7 @@ const targetSortHeaders = {
   qt: document.getElementById('targetSortQt'),
   maxPrice: document.getElementById('targetSortMaxPrice'),
   starter: document.getElementById('targetSortStarter'),
+  penalty: document.getElementById('targetPenaltyHeader'),
 };
 
 function targetSelectedRoles() {
@@ -360,7 +407,7 @@ function renderTargetList() {
   disposeTooltips(targetPlayerListBody);
   targetPlayerListBody.innerHTML =
     tagged.length === 0
-      ? emptyRow('No players match the current filters.', 5 + showBadges + showMaxPrice + showStarter)
+      ? emptyRow('No players match the current filters.', 5 + showPenalty + showBadges + showBallottaggio + showMaxPrice + showStarter)
       : tagged.map(targetPlayerRow).join('');
 }
 
@@ -1111,8 +1158,12 @@ if (!auction) {
   allPlayers = auction.players || [];
   showStarter = allPlayers.some((p) => p.starter !== '' && p.starter != null);
   document.getElementById('targetSortStarter').hidden = !showStarter;
+  showPenalty = allPlayers.some((p) => penaltyBadge(p) !== '');
+  document.getElementById('targetPenaltyHeader').hidden = !showPenalty;
   showBadges = allPlayers.some((p) => playerBadges(p) !== '');
   document.getElementById('targetBadgesHeader').hidden = !showBadges;
+  showBallottaggio = allPlayers.some((p) => ballottaggioBadges(p) !== '');
+  document.getElementById('targetBallottaggioHeader').hidden = !showBallottaggio;
   showMaxPrice = allPlayers.some((p) => p.maxPrice !== '' && p.maxPrice != null);
   document.getElementById('targetSortMaxPrice').hidden = !showMaxPrice;
   auction.log = auction.log || []; // older auction files have no log yet

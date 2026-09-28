@@ -237,6 +237,13 @@ body {
   color: #fff;
 }
 
+/* Ballottaggio icon: the font glyph's thin strokes thickened with an outline.
+   Also in the panel's 50-50 heading, where it keeps the heading's text colour. */
+.badge .bi-arrow-down-up,
+#targetBallottaggioHeader .bi-arrow-down-up {
+  -webkit-text-stroke: 0.6px currentColor;
+}
+
 /* Red badges beside the name: same red as the attack role badges (A, Pc). */
 .badge-att {
   background-color: var(--role-att);
