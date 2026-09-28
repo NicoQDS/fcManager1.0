@@ -257,10 +257,11 @@ body {
   display: block;
 }
 
-/* Goalkeeper circle line weights, in the SVG's 16-unit box (1 unit ≈ 1.25px at
-   this size). Bootstrap's own circle line is 1 unit; lower = thinner.
-   The circle's radius (7.5) keeps a line up to 1 unit inside the box. */
-.gk-rank-icon circle {
+/* Goalkeeper square line weight, in the SVG's 16-unit box (1 unit ≈ 1.25px at
+   this size). Bootstrap's own icon line is 1 unit; lower = thinner. The square
+   (inset 0.5, corner radius rx 3.5 in auction.js) keeps a line up to 1 unit
+   inside the box. */
+.gk-rank-icon rect {
   stroke-width: 0.75;
 }
 
@@ -279,11 +280,28 @@ body {
 .injury-icon-2 { color: var(--fcm-orange); }
 .injury-icon-3 { color: var(--role-att); }
 
-/* Panel name cell: name and goalkeeper icon in a flex row, so the icon is
-   centred on the name's line box; icon 5px after the name. */
+/* Panel name cell: markers (goalkeeper, ballottaggio, injury) 5px after the
+   name; the column's spare width stays empty after them. Flex rows keep the
+   markers centred on the name's line box. */
 #targetPlayerListBody .target-name {
+  display: flex;
+  align-items: center;
+}
+
+#targetPlayerListBody .target-name-markers {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
+  padding-left: 5px;
+}
+
+/* Start (titolarità) heading: an invisible copy of the sort arrow on the left
+   balances the real one on the right, so "start" sits centred over its badges. */
+#targetSortStarter::before {
+  content: '\2195';
+  visibility: hidden;
+  font-size: 0.8em;
+  margin-right: 0.25em;
 }
 
 /* Tier number in a circle as tall as a badge, line and number in the text colour. */
@@ -299,10 +317,19 @@ body {
   line-height: 1;
 }
 
-#targetPlayerListBody .gk-rank-icon,
-#targetPlayerListBody .injury-icon,
-#targetPlayerListBody .target-name > .badge {
-  margin-left: 5px;
+/* Max price in a rounded square as tall as a badge, line and number in the
+   attack-line red (same as the Pc/A role badges). */
+#targetPlayerListBody .max-price-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: calc(1.275em + 2px);
+  height: calc(1.275em + 2px);
+  padding: 0 0.3em;
+  border: 1px solid var(--role-att);
+  border-radius: 0.3rem;
+  color: var(--role-att);
+  line-height: 1;
 }
 
 /* Red badges beside the name: same red as the attack role badges (A, Pc). */
@@ -921,8 +948,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   font-size: 0.85rem;
 }
 
-/* Titolarità, then goalkeeper, penalty and injury badges right after the team, in the
-   badges column's order (P, rig, injury). */
+/* Titolarità, then goalkeeper, penalty and injury markers right after the team. */
 #selectedStatusBadges {
   display: inline-flex;
   align-items: center;
@@ -1378,6 +1404,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 }
 
 #targetPlayerListTableWrap thead th {
+  text-transform: lowercase; /* headings all lower case: roles, pen., tit. … */
   position: sticky;
   top: 0;
   background: #f8f9fa;
@@ -1391,10 +1418,20 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   vertical-align: middle; /* every cell centred, whatever the tallest one */
 }
 
-/* Every other column hugs its longest cell (width: 1% + nowrap); the badges
-   column (last) takes whatever width is left over. */
-#targetPlayerListTableWrap thead th#targetBadgesHeader {
+/* Roles, pen. and start hug their longest cell (width: 1% + nowrap); name,
+   team, tier, fM, max and info share whatever width is left over. */
+#targetPlayerListTableWrap thead th#targetSortName,
+#targetPlayerListTableWrap thead th#targetSortTeam,
+#targetPlayerListTableWrap thead th#targetSortTier,
+#targetPlayerListTableWrap thead th#targetSortQt,
+#targetPlayerListTableWrap thead th#targetMaxPriceHeader,
+#targetPlayerListTableWrap thead th#targetNotesHeader {
   width: auto;
+}
+
+/* fM keeps its capital M (fantamilioni); every other heading is lower case. */
+#targetPlayerListTableWrap thead th#targetSortQt {
+  text-transform: none;
 }
 
 /* Target players — tinted with the app's usual light-blue accent. */

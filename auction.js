@@ -83,9 +83,9 @@ function rankBadge(rank, { label, pill = false } = {}) {
   return ` <span class="${shape} ${color}">${esc(label ?? rank)}</span>`;
 }
 
-// Goalkeeper order: the rank in an outlined circle, no badge, coloured by rank
+// Goalkeeper order: the rank in an outlined rounded square, no badge, coloured by rank
 // (see .gk-rank-*). Drawn as inline SVG, not a Bootstrap Icons glyph, so the
-// line width is a plain CSS value (.gk-rank-icon circle / text in auction.css).
+// line width is a plain CSS value (.gk-rank-icon rect / text in auction.css).
 // A ballottaggio or anything that is not 0–9 keeps the plain rank badge.
 function gkRankIcon(rank) {
   const n = Number(String(rank ?? '').trim());
@@ -94,7 +94,7 @@ function gkRankIcon(rank) {
   }
   return `<svg class="gk-rank-icon gk-rank-${n}" viewBox="0 0 16 16" width="1em" height="1em" role="img">
     <title>Gerarchia portiere ${n}</title>
-    <circle cx="8" cy="8" r="7.5" fill="none" stroke="currentColor" />
+    <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" />
     <text x="8" y="8" text-anchor="middle" dominant-baseline="central" fill="currentColor">${n}</text>
   </svg>`;
 }
@@ -123,7 +123,7 @@ function noteIcon(note) {
   return `<i class="bi bi-info-circle note-icon" data-bs-toggle="tooltip" data-bs-title="${esc(note)}"></i>`;
 }
 
-// Goalkeeper, penalty and injury badges — the badges column minus the note icon.
+// Goalkeeper, penalty and injury markers for the selected-player strip.
 function statusBadges(p) {
   return [
     gkRankIcon(p.gkRank),
@@ -134,13 +134,7 @@ function statusBadges(p) {
 
 const isBallottaggio = (rank) => String(rank ?? '').trim().toLowerCase() === 'ballottaggio';
 
-// Everything shown in the panel's badges column. Goalkeeper order and injury sit
-// beside the name; penalty order and ballottaggio have their own columns.
-function playerBadges(p) {
-  return noteIcon(p.note);
-}
-
-// Panel name cell: goalkeeper-order numbered circle right of the name (a ballottaggio shows its arrow badge instead).
+// Panel name cell: goalkeeper-order numbered square right of the name (a ballottaggio shows its arrow badge instead).
 function gkBadge(p) {
   return isBallottaggio(p.gkRank) ? '' : gkRankIcon(p.gkRank);
 }
@@ -172,7 +166,15 @@ function tierCircle(p) {
   return `<span id="targetTier-${esc(p.id)}" class="tier-circle">${esc(tier)}</span>`;
 }
 
-// Players drawer row: Roles, Rig., Tit., Name, Team, Tier, Max, fM, then badges last.
+// Panel Max cell: the max price in a red rounded square (Pc/A red).
+function maxPriceBox(p) {
+  if (p.maxPrice === '' || p.maxPrice == null) {
+    return '';
+  }
+  return `<span id="targetMaxPrice-${esc(p.id)}" class="max-price-box">${esc(p.maxPrice)}</span>`;
+}
+
+// Players drawer row: Roles, Rig., Tit., Name, Team, Tier, fM, Max, then notes last.
 function targetPlayerRow(p) {
   const classes = [
     String(p.id) === String(selectedId) ? 'selected-row' : '',
@@ -184,12 +186,15 @@ function targetPlayerRow(p) {
     <td class="text-end">${roleBadges(p)}</td>
     ${showPenalty ? `<td class="text-center text-nowrap">${penaltyBadge(p)}</td>` : ''}
     ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
-    <td><span id="targetName-${esc(p.id)}" class="target-name">${esc(p.name)}${gkBadge(p)}${ballottaggioBadges(p)}${injuryIcon(p.injury)}</span></td>
+    <td><span id="targetName-${esc(p.id)}" class="target-name">
+      <span id="targetNameText-${esc(p.id)}">${esc(p.name)}</span>
+      <span id="targetNameMarkers-${esc(p.id)}" class="target-name-markers">${gkBadge(p)}${ballottaggioBadges(p)}${injuryIcon(p.injury)}</span>
+    </span></td>
     <td>${esc(p.team)}</td>
     <td class="text-center">${tierCircle(p)}</td>
-    ${showMaxPrice ? `<td class="text-center">${esc(p.maxPrice)}</td>` : ''}
     <td>${esc(p.qt)}</td>
-    ${showBadges ? `<td class="text-nowrap">${playerBadges(p)}</td>` : ''}
+    ${showMaxPrice ? `<td class="text-center">${maxPriceBox(p)}</td>` : ''}
+    ${showNotes ? `<td class="text-nowrap">${noteIcon(p.note)}</td>` : ''}
   </tr>`;
 }
 
@@ -232,23 +237,6 @@ const comparators = {
   // Qt.A M value; same value → Titolarità descending → FVM descending → name ascending. Regardless of Qt direction.
   qt: (a, b, asc) => {
     const q = dir(num(a.qt) - num(b.qt), !asc);
-    if (q !== 0) return q;
-    const s = byStarterDesc(a, b);
-    if (s !== 0) return s;
-    const f = num(b.fvm) - num(a.fvm);
-    return f !== 0 ? f : byName(a, b);
-  },
-  // Prezzo massimo, first click highest first; players without a value always last.
-  // Ties → Qt.A M desc → Titolarità desc → FVM desc → name asc, regardless of direction.
-  maxPrice: (a, b, asc) => {
-    const ea = a.maxPrice === '' || a.maxPrice == null;
-    const eb = b.maxPrice === '' || b.maxPrice == null;
-    if (ea !== eb) return ea ? 1 : -1;
-    if (!ea) {
-      const m = dir(num(a.maxPrice) - num(b.maxPrice), !asc);
-      if (m !== 0) return m;
-    }
-    const q = byQtDesc(a, b);
     if (q !== 0) return q;
     const s = byStarterDesc(a, b);
     if (s !== 0) return s;
@@ -310,7 +298,7 @@ const roleChecks = [...document.querySelectorAll('#roleFilter .btn-check')];
 let allPlayers = [];
 let showStarter = false; // true when the file carries any "Titolarità" value
 let showPenalty = false; // true when any player has a penalty order (not ballottaggio)
-let showBadges = false; // true when any player has something for the badges column
+let showNotes = false; // true when any player has a note (panel notes column)
 let showMaxPrice = false; // true when the file carries any "Prezzo massimo" value
 let sortKey = null;
 let sortAsc = true;
@@ -402,7 +390,6 @@ const targetSortHeaders = {
   team: document.getElementById('targetSortTeam'),
   roles: document.getElementById('targetSortRoles'),
   qt: document.getElementById('targetSortQt'),
-  maxPrice: document.getElementById('targetSortMaxPrice'),
   starter: document.getElementById('targetSortStarter'),
   penalty: document.getElementById('targetPenaltyHeader'),
 };
@@ -432,7 +419,7 @@ function renderTargetList() {
   disposeTooltips(targetPlayerListBody);
   targetPlayerListBody.innerHTML =
     tagged.length === 0
-      ? emptyRow('No players match the current filters.', 5 + showPenalty + showBadges + showMaxPrice + showStarter)
+      ? emptyRow('No players match the current filters.', 5 + showPenalty + showNotes + showMaxPrice + showStarter)
       : tagged.map(targetPlayerRow).join('');
 }
 
@@ -1185,10 +1172,10 @@ if (!auction) {
   document.getElementById('targetSortStarter').hidden = !showStarter;
   showPenalty = allPlayers.some((p) => penaltyBadge(p) !== '');
   document.getElementById('targetPenaltyHeader').hidden = !showPenalty;
-  showBadges = allPlayers.some((p) => playerBadges(p) !== '');
-  document.getElementById('targetBadgesHeader').hidden = !showBadges;
+  showNotes = allPlayers.some((p) => noteIcon(p.note) !== '');
+  document.getElementById('targetNotesHeader').hidden = !showNotes;
   showMaxPrice = allPlayers.some((p) => p.maxPrice !== '' && p.maxPrice != null);
-  document.getElementById('targetSortMaxPrice').hidden = !showMaxPrice;
+  document.getElementById('targetMaxPriceHeader').hidden = !showMaxPrice;
   auction.log = auction.log || []; // older auction files have no log yet
   teams = makeTeams(auction.teams, auction.initialCredits);
   hydrateTeams(); // replay past assignments into credits and rosters
