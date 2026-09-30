@@ -79,22 +79,32 @@ const saveStatus = document.getElementById('saveStatus');
 const modeClassic = document.getElementById('modeClassic');
 const modeMantra = document.getElementById('modeMantra');
 const maxBuyableCol = document.getElementById('maxBuyableCol');
+const enableMinBuyable = document.getElementById('enableMinBuyable');
+const minBuyable = document.getElementById('minBuyable');
+const minBuyableCol = document.getElementById('minBuyableCol');
 
 // Players parsed from the last valid xlsx, ready to save.
 let parsedPlayers = null;
 
-// Max buyable only applies to Mantra — hidden and forced off under Classic.
+// Max and min buyable only apply to Mantra — hidden and forced off under Classic.
 function updateModeVisibility() {
   maxBuyableCol.classList.toggle('d-none', modeClassic.checked);
+  minBuyableCol.classList.toggle('d-none', modeClassic.checked);
   document.body.classList.toggle('mode-classic', modeClassic.checked);
   if (modeClassic.checked) {
     enableMaxBuyable.checked = false;
+    enableMinBuyable.checked = false;
     updateMaxBuyableEnabled();
+    updateMinBuyableEnabled();
   }
 }
 
 function updateMaxBuyableEnabled() {
   maxBuyable.disabled = !enableMaxBuyable.checked;
+}
+
+function updateMinBuyableEnabled() {
+  minBuyable.disabled = !enableMinBuyable.checked;
 }
 
 function syncTeamNameInputs() {
@@ -138,10 +148,21 @@ function validateForm() {
     }
   });
 
+  // With both limits on, the minimum can't exceed the maximum.
+  const minOverMax =
+    enableMinBuyable.checked &&
+    enableMaxBuyable.checked &&
+    parseInt(minBuyable.value, 10) > parseInt(maxBuyable.value, 10);
+  minBuyable.classList.toggle('is-invalid-field', minOverMax);
+  if (minOverMax) {
+    isValid = false;
+  }
+
   return isValid;
 }
 
 enableMaxBuyable.addEventListener('change', updateMaxBuyableEnabled);
+enableMinBuyable.addEventListener('change', updateMinBuyableEnabled);
 modeClassic.addEventListener('change', updateModeVisibility);
 modeMantra.addEventListener('change', updateModeVisibility);
 
@@ -257,6 +278,8 @@ function buildAuction() {
     initialCredits: parseInt(initialCredits.value, 10),
     maxBuyableEnabled: enableMaxBuyable.checked,
     maxBuyable: parseInt(maxBuyable.value, 10),
+    minBuyableEnabled: enableMinBuyable.checked,
+    minBuyable: parseInt(minBuyable.value, 10),
     teams,
     userTeam: teams[0] || '', // first name entered is the user's own team
     players: parsedPlayers,
@@ -325,5 +348,6 @@ createAuctionBtn.addEventListener('click', async () => {
 });
 
 updateMaxBuyableEnabled();
+updateMinBuyableEnabled();
 updateModeVisibility();
 syncTeamNameInputs();

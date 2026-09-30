@@ -503,7 +503,7 @@ function teamCard(team, rank) {
   const out = teamIsOut(team) ? ' out' : '';
   const active = team.name === pickedTeam ? ' active' : '';
   const initial = num(team.initial) || 0;
-  // Orange = credits left, black = credits spent.
+  // Accent fill = credits left, grey track = credits spent.
   const left = initial > 0 ? Math.max(0, Math.min(100, (num(team.credits) / initial) * 100)) : 0;
   // The slot is rendered on every card so the rank boxes stay in one line;
   // only the user's own team fills it.
@@ -511,20 +511,54 @@ function teamCard(team, rank) {
   const star = mine
     ? `<span class="team-star" title="Your team">${STAR_FILL}</span>`
     : '<span class="team-star"></span>';
+  // Roster bar under the purse bar, only with a cap: accent fill = players bought.
+  const cap = auction && auction.maxBuyableEnabled ? num(auction.maxBuyable) : 0;
+  const index = teams.indexOf(team);
+  const bought = team.roster.length;
+  // Max bid next to the credits, only when a minimum roster is set.
+  const maxBid = auction && auction.minBuyableEnabled
+    ? `<span id="teamMaxBid-${index}" class="team-max-bid"> ${esc(teamMaxBid(team))} max</span>`
+    : '';
+  const rosterBar = cap > 0
+    ? `<div id="teamRosterBar-${index}" class="progress team-roster-bar" role="progressbar" aria-label="Players bought" aria-valuenow="${bought}" aria-valuemin="0" aria-valuemax="${cap}">
+        <div id="teamRosterBarFill-${index}" class="progress-bar team-bar-fill" style="width: ${Math.min(100, (bought / cap) * 100).toFixed(1)}%"></div>
+      </div>`
+    : '';
   return `<div class="team-card${mine}${active}${out}" data-team="${esc(team.name)}">
     <div class="team-rank">${esc(rank)}</div>
     <div class="team-card-body">
       <div class="team-card-head">
         <span class="team-credits">${esc(team.credits)} fM</span>
+        ${maxBid}
         ${star}
         <span class="team-name">${esc(team.name)}</span>
         <span class="team-count">${esc(team.roster.length)}</span>
       </div>
-      <div class="team-bar" role="progressbar" aria-valuenow="${esc(team.credits)}" aria-valuemin="0" aria-valuemax="${esc(initial)}">
-        <div class="team-bar-fill" style="width: ${left.toFixed(1)}%"></div>
+      <div class="progress team-bar" role="progressbar" aria-label="Credits left" aria-valuenow="${esc(team.credits)}" aria-valuemin="0" aria-valuemax="${esc(initial)}">
+        <div class="progress-bar team-bar-fill" style="width: ${left.toFixed(1)}%"></div>
       </div>
+      ${rosterBar}
     </div>
   </div>`;
+}
+
+// Highest bid the team can make, keeping 1 fM for every other player it must
+// still buy: with a minimum, the players still missing to reach it after this
+// one; with only a cap, every other slot still open; with neither, all its
+// credits. A full roster can't bid (0).
+function teamMaxBid(team) {
+  const x = team.roster.length;
+  const hasMax = Boolean(auction && auction.maxBuyableEnabled);
+  const hasMin = Boolean(auction && auction.minBuyableEnabled);
+  const y = hasMax ? Math.max(num(auction.maxBuyable) - x, 0) : Infinity;
+  // Players the team must still buy after this one, each needing at least 1 fM.
+  let reserve = 0;
+  if (hasMin) {
+    reserve = Math.max(num(auction.minBuyable) - x - 1, 0);
+  } else if (hasMax) {
+    reserve = Math.max(y - 1, 0);
+  }
+  return y > 0 ? Math.max(num(team.credits) - reserve, 0) : 0;
 }
 
 // Richest team on top; equal purses keep a stable order by name. That order is
@@ -537,9 +571,6 @@ function renderTeams() {
       : ordered.map((t, i) => teamCard(t, i + 1)).join('');
 
   const mine = auction && teamByName(auction.userTeam);
-  document.getElementById('mineRosterStats').textContent = mine
-    ? `${mine.roster.length} - ${mine.credits}`
-    : '';
   renderMineRoster(mine);
   renderOtherRosters();
   renderAuctionProgress();
@@ -633,7 +664,6 @@ function otherRosterCard(team) {
   return `<div class="other-roster-panel">
     <div class="other-roster-name">
       <span>${esc(team.name)}</span>
-      <span class="other-roster-stats">${team.roster.length} - ${team.credits}</span>
       <button type="button" class="other-roster-edit-btn${editing ? ' active' : ''}" data-team="${esc(team.name)}" title="Edit" aria-label="Edit">
         ${OTHER_ROSTER_EDIT_ICON}
       </button>

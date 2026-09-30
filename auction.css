@@ -453,13 +453,6 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   font-size: 1rem;
 }
 
-#mineRosterStats {
-  margin-left: 0.4rem;
-  color: #758088;
-  font-weight: 400;
-  font-size: 0.85rem;
-}
-
 #mineRosterEditBtn {
   margin-left: auto;
   flex: 0 0 auto;
@@ -567,13 +560,6 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   font-weight: 600;
   text-align: left;
   font-size: 1rem;
-}
-
-.other-roster-stats {
-  margin-left: 0.4rem;
-  color: #758088;
-  font-weight: 400;
-  font-size: 0.85rem;
 }
 
 .other-roster-edit-btn {
@@ -867,15 +853,24 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   font-size: 0.95rem;
 }
 
-/* Purse bar: orange = credits left, black track = credits spent. */
+/* Max bid beside the credits (min roster only), 2px smaller. */
+.team-max-bid {
+  color: #758088;
+  font-size: calc(0.75rem);
+}
+
+/* Purse bar, a Bootstrap progress styled like the roster cap progress:
+   accent fill = credits left, Bootstrap's grey track = credits spent. */
 .team-bar {
-  /* Whole pixels: a fractional height rounds differently per card and the bars
-     come out visibly uneven. */
-  height: 5px;
+  height: 14px;
   margin-top: 6px;
-  border-radius: 2px;
-  background: #000;
-  overflow: hidden;
+}
+
+/* Roster bar under the purse bar, shown only with a max-buyable cap:
+   accent fill = players bought, grey track = slots left. */
+.team-roster-bar {
+  height: 10px;
+  margin-top: 4px;
 }
 
 .team-bar-fill {
@@ -901,7 +896,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   --pick: var(--fcm-orange); /* fallback: player with no role */
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* name, team and every badge stay on one line */
   gap: 0.1rem 0.45rem;
   min-height: 2.4rem;
   padding: 0.4rem 0.6rem;
@@ -947,6 +942,20 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 #selectedPlayer .selected-team {
   color: #6c757d;
   font-size: 0.85rem;
+}
+
+/* Short of room, only the team shrinks with an ellipsis; the name and the
+   badges always show in full. */
+#selectedPlayer .selected-team {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#selectedPlayer :is(.selected-name, #selectedStatusBadges, .selected-badges) {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Titolarità, then goalkeeper, penalty and injury markers right after the team. */
@@ -1105,13 +1114,17 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   gap: 0.5rem;
 }
 
+/* No min-width: 0, so the strip never gets narrower than its name and badges:
+   the player panel widens instead. */
 #pickRow #selectedPlayer {
   flex: 1 1 auto;
-  min-width: 0;
 }
 
+/* No wrap here: a wrapping row counts only its widest control towards the
+   panel's minimum width, so the panel stayed too narrow and clipped them. */
 #pickRow .action-controls {
   flex: 0 0 auto;
+  flex-wrap: nowrap;
   align-items: stretch; /* price box and both buttons match the strip */
 }
 
@@ -1141,11 +1154,16 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 /* fM suffix rides with the price box, same as #initialCredits-group. */
 #assignPrice-group {
   flex: 0 0 auto;
+  flex-wrap: nowrap; /* Bootstrap's wrap would hide its width from the panel */
   width: auto;
 }
 
-/* No spinner: the price is typed, and the arrows ate a third of the box. */
+/* No spinner: the price is typed, and the arrows ate a third of the box.
+   Fixed width instead of Bootstrap's width: 1% + min-width: 0, which count as
+   no width at all when the panel sizes itself to fit the pick row. */
 #assignPrice {
+  flex: 0 0 44px;
+  width: 44px;
   max-width: 44px;
   appearance: textfield;
   -moz-appearance: textfield;
@@ -1164,7 +1182,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   position: fixed;
   top: 0;
   right: 0;
-  width: 35vw;
+  width: 38vw;
   height: 100vh;
   z-index: 30;
   pointer-events: none; /* only the tab + inner panel should catch clicks */
@@ -1209,7 +1227,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 #scoutDrawerInner {
   position: relative; /* anchors the tab's absolute offset */
   pointer-events: auto;
-  width: 35vw;
+  width: 38vw;
   height: 100vh;
   display: flex;
   flex-direction: column;

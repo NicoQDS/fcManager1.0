@@ -107,7 +107,34 @@
                       </div>
                     </div>
 
-                    <div id="maxBuyableCol" class="col-auto">
+                    <div id="minBuyableCol" class="col-auto">
+                      <div
+                        id="minBuyableBlock"
+                        class="form-check form-switch d-flex align-items-center mb-0"
+                      >
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="enableMinBuyable"
+                          checked
+                        />
+                        <label
+                          class="form-check-label ms-2 me-2"
+                          for="enableMinBuyable"
+                          >Min</label
+                        >
+                        <input
+                          type="number"
+                          class="form-control"
+                          id="minBuyable"
+                          value="24"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Line break, then Max right-aligned under Min. -->
+                    <div class="w-100"></div>
+                    <div id="maxBuyableCol" class="col-auto ms-auto">
                       <div
                         id="maxBuyableBlock"
                         class="form-check form-switch d-flex align-items-center mb-0"
@@ -116,6 +143,7 @@
                           class="form-check-input"
                           type="checkbox"
                           id="enableMaxBuyable"
+                          checked
                         />
                         <label
                           class="form-check-label ms-2 me-2"
@@ -127,7 +155,6 @@
                           class="form-control"
                           id="maxBuyable"
                           value="30"
-                          disabled
                         />
                       </div>
                     </div>
