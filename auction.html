@@ -328,12 +328,22 @@
           </div>
         </section>
 
-        <!-- TEAMS SIDEBAR -->
+        <!-- TEAMS SIDEBAR + SALES LOG -->
         <aside id="teamsColumn">
           <div id="teamsPanel">
             <div id="teamsZone">
               <!-- filled from the loaded auction by auction.js -->
             </div>
+          </div>
+
+          <div id="logPanel">
+            <div id="auctionLogHead">
+              <span id="auctionLogTitle">Log</span>
+              <span id="auctionProgress" title="Players bought out of all roster slots" hidden></span>
+            </div>
+            <ul id="auctionLogList">
+              <!-- one entry per sale, newest first -->
+            </ul>
           </div>
         </aside>
 
@@ -373,15 +383,6 @@
             </div>
           </div>
           <div id="rosterPanel"></div>
-          <div id="logPanel">
-            <div id="auctionLogHead">
-              <span id="auctionLogTitle">Log</span>
-              <span id="auctionProgress" title="Players bought out of all roster slots" hidden></span>
-            </div>
-            <ul id="auctionLogList">
-              <!-- one entry per sale, newest first -->
-            </ul>
-          </div>
         </section>
       </main>
     </div>
@@ -413,7 +414,6 @@
             />
           </svg>
         </button>
-        <div id="scoutDrawerHead">My notes</div>
         <div id="myNotesDrawerBody">
           <!-- Panel search: picking a hit scrolls it to the top of the table. -->
           <div id="targetSearchWrap">
