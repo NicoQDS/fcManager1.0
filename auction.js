@@ -573,6 +573,7 @@ function renderTeams() {
   const mine = auction && teamByName(auction.userTeam);
   renderMineRoster(mine);
   renderOtherRosters();
+  renderAllRosters();
   renderAuctionProgress();
 }
 
@@ -701,6 +702,59 @@ document.getElementById('rosterPanel').addEventListener('click', (e) => {
   if (removeBtn) {
     unassignPlayer(removeBtn.dataset.id);
   }
+});
+
+// All rosters drawer: one read-only card per team, mine first, then the rest
+// alphabetically. Each card: name, credits left, players bought, roster rows.
+function allRosterRow(p) {
+  return `<tr id="allRosterRow-${esc(p.id)}">
+    <td class="roster-roles-cell">${roleBadges(p)}</td>
+    <td class="roster-name-cell">${esc(p.name)}</td>
+    <td class="roster-team-cell">${esc(p.team)}</td>
+    <td class="roster-price-cell">${esc(p.price)} fM</td>
+  </tr>`;
+}
+
+function allRosterCard(team, i, mineName) {
+  const mineClass = team.name === mineName ? ' all-roster-card-mine' : '';
+  const players = [...team.roster].sort((a, b) => roleRank(a) - roleRank(b) || byName(a, b));
+  return `<div id="allRosterCard-${i}" class="all-roster-card${mineClass}">
+    <div id="allRosterName-${i}" class="all-roster-name">
+      <span>${esc(team.name)}</span>
+      <span id="allRosterMeta-${i}" class="all-roster-meta">${esc(team.credits)} fM · ${players.length} pl.</span>
+    </div>
+    <div id="allRosterTableWrap-${i}" class="all-roster-table-wrap">
+      <table id="allRosterTable-${i}" class="all-roster-table">
+        <tbody>
+          ${players.map(allRosterRow).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderAllRosters() {
+  const mineName = (auction && auction.userTeam) || '';
+  const ordered = [...teams].sort(
+    (a, b) => (b.name === mineName) - (a.name === mineName) || byName(a, b),
+  );
+  document.getElementById('allRostersDrawerBody').innerHTML = ordered
+    .map((t, i) => allRosterCard(t, i, mineName))
+    .join('');
+}
+
+// All rosters drawer: the wheel scrolls the cards sideways, except over a
+// player list long enough to scroll on its own, which keeps the vertical wheel.
+document.getElementById('allRostersDrawerBody').addEventListener('wheel', (e) => {
+  if (e.deltaY === 0) {
+    return;
+  }
+  const wrap = e.target.closest('.all-roster-table-wrap');
+  if (wrap && wrap.scrollHeight > wrap.clientHeight) {
+    return;
+  }
+  e.preventDefault();
+  e.currentTarget.scrollLeft += e.deltaY;
 });
 
 // A plain mouse wheel only reports vertical delta — redirect it sideways.
@@ -898,7 +952,8 @@ function attachSearch({ input, list, wrap, pool, onPick }) {
     } else if (e.key === 'Enter' && activeHit >= 0) {
       e.preventDefault();
       onPick(hits[activeHit]);
-    } else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape' && !list.hidden) {
+      e.preventDefault(); // first Esc only closes the hit list, not the drawer
       close();
     }
   });
@@ -1158,6 +1213,7 @@ function toggleScoutDrawer() {
   scoutDrawerTab.setAttribute('aria-expanded', String(open));
   if (open) {
     closeMantraDrawer();
+    closeAllRostersDrawer();
   }
 }
 
@@ -1178,7 +1234,39 @@ mantraDrawerTab.addEventListener('click', () => {
   if (open) {
     scoutDrawer.classList.remove('open');
     scoutDrawerTab.setAttribute('aria-expanded', 'false');
+    closeAllRostersDrawer();
   }
+});
+
+// --- All rosters drawer: full page, only one drawer open at a time ---
+const allRostersDrawer = document.getElementById('allRostersDrawer');
+const allRostersDrawerTab = document.getElementById('allRostersDrawerTab');
+
+function closeAllRostersDrawer() {
+  allRostersDrawer.classList.remove('open');
+  allRostersDrawerTab.setAttribute('aria-expanded', 'false');
+}
+
+allRostersDrawerTab.addEventListener('click', () => {
+  const open = allRostersDrawer.classList.toggle('open');
+  allRostersDrawerTab.setAttribute('aria-expanded', String(open));
+  if (open) {
+    scoutDrawer.classList.remove('open');
+    scoutDrawerTab.setAttribute('aria-expanded', 'false');
+    closeMantraDrawer();
+  }
+});
+
+// Esc closes whichever drawer is open. Skipped when a search box already used
+// it to close its hit list (that keydown calls preventDefault).
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || e.defaultPrevented) {
+    return;
+  }
+  scoutDrawer.classList.remove('open');
+  scoutDrawerTab.setAttribute('aria-expanded', 'false');
+  closeMantraDrawer();
+  closeAllRostersDrawer();
 });
 
 // Middle-click anywhere toggles the drawer too. auxclick (not mousedown) so

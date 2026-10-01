@@ -672,12 +672,12 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   padding: 0.75rem;
 }
 
-/* SALES LOG — own card under the teams, newest entry on top. */
+/* SALES LOG — own card right of the other rosters, newest entry on top. */
 #logPanel {
-  flex: 1 1 auto; /* eats every pixel the team cards leave, empty or not */
+  flex: 0 0 260px;
   display: flex;
   flex-direction: column;
-  min-height: 6rem;
+  min-height: 0;
   border-radius: 0.5rem;
   overflow: hidden; /* keeps the scrolling list inside the rounded corners */
   background: #343a40;
@@ -1338,6 +1338,161 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   overflow-y: auto;
   padding: 0.75rem;
 }
+/* ALL ROSTERS DRAWER — same slide mechanics as the scouting drawer, but
+   full page (less the tab width, so the tab stays on screen to close it).
+   Light-grey tab placed just above the orange one (56px tab + 6px gap). */
+#allRostersDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: calc(100vw - 28px);
+  height: 100vh;
+  z-index: 30;
+  pointer-events: none;
+}
+
+#allRostersDrawer.open {
+  z-index: 32; /* above every other drawer while open */
+}
+
+#allRostersDrawerTab {
+  pointer-events: auto;
+  position: absolute;
+  left: -28px;
+  top: calc(50% - 90px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 28px;
+  height: 56px;
+  padding-right: 0.3rem;
+  border: none;
+  border-radius: 0.5rem 0 0 0.5rem;
+  background: var(--bs-secondary); /* same as #resetBtn (btn-secondary) */
+  color: #fff;
+  box-shadow: -0.15rem 0 0.4rem rgba(0, 0, 0, 0.08);
+  transition: background 0.15s ease;
+}
+
+#allRostersDrawerTab:hover {
+  background: #5c636a; /* btn-secondary hover */
+}
+
+#allRostersDrawerTab svg {
+  transition: transform 0.2s ease;
+  transform: rotate(180deg);
+}
+
+#allRostersDrawer.open #allRostersDrawerTab svg {
+  transform: rotate(0deg);
+}
+
+#allRostersDrawerInner {
+  position: relative;
+  pointer-events: auto;
+  width: calc(100vw - 28px);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-left: 1px solid #dee2e6;
+  box-shadow: -0.25rem 0 0.6rem rgba(0, 0, 0, 0.08);
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+}
+
+#allRostersDrawer.open #allRostersDrawerInner {
+  transform: translateX(0);
+}
+
+/* Cards sit on one line, full height; the body scrolls sideways when they
+   don't fit, and each card scrolls its own players vertically. */
+#allRostersDrawerBody {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.75rem;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.75rem;
+}
+
+/* Same card as .other-roster-panel; the mine one swaps orange for cyan. */
+.all-roster-card {
+  flex: 0 0 auto;
+  width: fit-content;
+  min-width: 14rem; /* an empty team still gets a usable column */
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--fcm-orange);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.all-roster-card.all-roster-card-mine {
+  border-color: var(--fcm-mine);
+}
+
+.all-roster-name {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  color: var(--fcm-orange);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.all-roster-card-mine .all-roster-name {
+  color: var(--fcm-mine);
+}
+
+.all-roster-meta {
+  margin-left: auto;
+  color: #6c757d;
+  font-size: 0.8rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.all-roster-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 0.6rem 0.6rem;
+}
+
+.all-roster-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.all-roster-table td {
+  padding: 0.25rem 0.35rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #eee;
+}
+
+.all-roster-table .roster-roles-cell {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.all-roster-table .roster-name-cell {
+  font-weight: 600;
+}
+
+.all-roster-table .roster-price-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Tagged-players table — same look as the main role filter + player list,
    scoped under target* ids so it runs independent filter/sort state. */
 #targetSearchWrap {

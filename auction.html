@@ -328,22 +328,12 @@
           </div>
         </section>
 
-        <!-- TEAMS SIDEBAR + SALES LOG -->
+        <!-- TEAMS SIDEBAR -->
         <aside id="teamsColumn">
           <div id="teamsPanel">
             <div id="teamsZone">
               <!-- filled from the loaded auction by auction.js -->
             </div>
-          </div>
-
-          <div id="logPanel">
-            <div id="auctionLogHead">
-              <span id="auctionLogTitle">Log</span>
-              <span id="auctionProgress" title="Players bought out of all roster slots" hidden></span>
-            </div>
-            <ul id="auctionLogList">
-              <!-- one entry per sale, newest first -->
-            </ul>
           </div>
         </aside>
 
@@ -383,6 +373,15 @@
             </div>
           </div>
           <div id="rosterPanel"></div>
+          <div id="logPanel">
+            <div id="auctionLogHead">
+              <span id="auctionLogTitle">Log</span>
+              <span id="auctionProgress" title="Players bought out of all roster slots" hidden></span>
+            </div>
+            <ul id="auctionLogList">
+              <!-- one entry per sale, newest first -->
+            </ul>
+          </div>
         </section>
       </main>
     </div>
@@ -549,6 +548,37 @@
         <div class="side-drawer-head">Moduli mantra</div>
         <div class="side-drawer-body">
           <img src="asset/img/moduli%20mantra.png" alt="Moduli mantra" class="img-fluid" />
+        </div>
+      </div>
+    </aside>
+
+    <!-- ALL ROSTERS DRAWER — same slide mechanics, but full page; its grey tab
+         sits just above the orange one. Every team's roster, mine first. -->
+    <aside id="allRostersDrawer">
+      <div id="allRostersDrawerInner">
+        <button
+          type="button"
+          id="allRostersDrawerTab"
+          title="All rosters"
+          aria-label="Toggle all rosters drawer"
+          aria-expanded="false"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"
+            />
+          </svg>
+        </button>
+        <div id="allRostersDrawerBody">
+          <!-- one card per team, filled by auction.js -->
         </div>
       </div>
     </aside>
