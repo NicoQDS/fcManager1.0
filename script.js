@@ -215,9 +215,11 @@ function parsePlayers(sheet) {
   }
 
   const head = rows[headerIdx];
-  const col = (name) =>
-    head.findIndex(
-      (h) => String(h).trim().toLowerCase() === name.toLowerCase()
+  // Accepts several header names, so both the English and the older Italian
+  // scouting columns are recognised.
+  const col = (...names) =>
+    head.findIndex((h) =>
+      names.some((name) => String(h).trim().toLowerCase() === name.toLowerCase())
     );
   const cId = col('Id');
   const cRM = col('RM');
@@ -229,12 +231,12 @@ function parsePlayers(sheet) {
   const cFvm = col('FVM M');
   const cTier = col('Tier');
   const cTarget = col('Target');
-  const cNote = col('Note');
-  const cStarter = col('Titolarità');
-  const cInjury = col('Infortunio');
-  const cGkRank = col('Gerarchia portiere');
-  const cPenaltyRank = col('Rigorista');
-  const cMaxPrice = col('Prezzo massimo');
+  const cNote = col('Notes', 'Note');
+  const cStarter = col('Starter', 'Titolarità');
+  const cInjury = col('Injury', 'Infortunio');
+  const cGkRank = col('GK hierarchy', 'Gerarchia portiere');
+  const cPenaltyRank = col('Penalty', 'Rigorista');
+  const cMaxPrice = col('Max price', 'Prezzo massimo');
 
   const players = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {

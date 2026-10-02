@@ -379,7 +379,10 @@ document.getElementById('rolesNone').addEventListener('click', () => {
 const targetRoleChecks = [...document.querySelectorAll('#targetRoleFilter .btn-check')];
 const targetPlayerListBody = document.getElementById('targetPlayerListBody');
 // Note tooltips (Bootstrap): delegated so re-rendered rows work without re-init.
-new bootstrap.Tooltip(targetPlayerListBody, { selector: '[data-bs-toggle="tooltip"]' });
+new bootstrap.Tooltip(targetPlayerListBody, {
+  selector: '[data-bs-toggle="tooltip"]',
+  customClass: 'note-tooltip',
+});
 
 let targetSortKey = null;
 let targetSortAsc = true;
@@ -998,7 +1001,7 @@ function showSelected(p) {
     <span class="selected-badges">${roleBadges(p)}</span>`;
 
   if (p.note) {
-    pickNote.textContent = `${p.note} (${p.tier})`;
+    pickNote.textContent = `${String(p.note).trimEnd()} (${p.tier})`;
   } else {
     pickNote.textContent = '';
   }

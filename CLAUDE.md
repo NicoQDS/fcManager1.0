@@ -42,7 +42,7 @@ Every `:id` route rejects ids containing `/`, `\` or `..` before they reach `pat
 `parsePlayers` in `script.js` reads the sheet named **`Tutti`**. It finds the header row as the first row that contains both `Id` and `Nome`, then matches columns by header name, ignoring case:
 
 - Required: `Id`, `RM` (roles, `;`-separated), `Nome`, `Squadra`, `Qt.A M`, `Qt.I M`, `Diff.M`, `FVM M`.
-- Optional scouting columns: `Tier`, `Target`, `Note`, `Titolarità`, `Infortunio` (1–3), `Gerarchia portiere`, `Rigorista`, `Prezzo massimo`.
+- Optional scouting columns, English or Italian header: `Starter`/`Titolarità`, `Injury`/`Infortunio` (1–3), `Tier`, `GK hierarchy`/`Gerarchia portiere`, `Penalty`/`Rigorista`, `Max price`/`Prezzo massimo`, `Target`, `Notes`/`Note`.
 
 A missing optional column becomes `''`. `auction.js` shows or hides the related table columns depending on whether any player has data for them. The current source file is `asset/players excel/qt.xlsx`. Old versions are in `asset/players excel/_old/`. The app never reads this folder: the file is uploaded through the browser form.
 
