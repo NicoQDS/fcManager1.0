@@ -12,6 +12,7 @@ Before starting, Claude asks the user these questions and waits for the answers:
 
 1. How many teams are in the league?
 2. Classic or Mantra?
+3. How many credits does each team start with?
 
 ## Sources
 
@@ -56,5 +57,6 @@ Read the single file in `raw data/` and never change it. Write the result as a n
    - gk hierarchy: goalkeepers only, ranked within their own club by the online research. A whole number from 1 (most likely to start) to 4 (least likely to start).
      - Goalkeepers ranked after 4 get an empty cell. Outfield players always get an empty cell.
      - When two or more goalkeepers of the same club are in a ballot for the starting spot, write `ballottaggio` for each of them instead of a number. Also add this line to the notes cell of each of them, listing every goalkeeper in the ballot with his starter percentage: `- gk: Name1 60%, Name2 40%`, followed by a line break (a new line inside the cell). Plain text only, no HTML tags.
-   - penalty: the player's place in his club's penalty-taker order, from the online research. 1 = most likely penalty taker, 2 = the next one. When two or more players of the same club are in a ballot to take penalties, write `ballottaggio` for each of them instead of a number. Leave the cell empty for everyone else.
+   - penalty: the player's place in his club's penalty-taker order, from the online research. 1 = most likely penalty taker, 2 = the next one. When two or more players of the same club are in a ballot to take penalties, write `ballottaggio` for each of them instead of a number. Also add this line to the notes cell of each of them, listing every player in the ballot with his likelihood of taking the next penalty: `- penalty: Name1 60%, Name2 40%`, followed by a line break (a new line inside the cell). Plain text only, no HTML tags. Leave the cell empty for everyone else.
+   - max price: the suggested maximum price, in credits, to pay for the player at the auction. Base it on the online research (auction price guides) and, where possible, adjust it to the number of teams, the credits per team and the league style (Classic or Mantra). Every player must have a value: a whole number, at least 1.
      - Example: 8 teams, Mantra: the 8 strongest `Dc` get tier 1, the next 8 `Dc` get tier 2. 8 teams, Classic: the 8 strongest `D` get tier 1.
