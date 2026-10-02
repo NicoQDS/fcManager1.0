@@ -38,6 +38,11 @@ Freshness, for every column:
 - When sources disagree, the most recent one wins.
 - Use older information only when nothing recent covers the player, and give it less weight.
 
+Cross-check, for every column:
+
+- Confirm each value with at least 2 sources from the list above.
+- When only one source covers a value, still use it. For a note line, add `(1 source)` at the end of the line.
+
 Column-specific preferences:
 
 - injury (and the `- injury:` note line): use only news from the last week. Injuries change fast, so drop older reports unless a recent source confirms them.
@@ -46,6 +51,12 @@ Column-specific preferences:
 ## Tasks for Claude
 
 Read the single file in `raw data/` and never change it. Write the result as a new Excel file in `asset/players excel/`, with the same file name as the raw file.
+
+How to work:
+
+- Use one subagent per Serie A club, run in parallel. Each subagent researches only its own club's players across all the sources, cross-checks the values, and fills starter, injury, gk hierarchy, penalty, ballot and notes. It saves its results to a JSON file in the scratchpad directory, so finished work survives if the context is compacted.
+- After all subagents finish, merge their JSON files. Then set tier and max price on the merged data, because they compare players across all clubs.
+- Write the Excel file only at the end, from the merged data.
 
 1. In the sheet `Tutti`, add these columns after the last existing column (`FVM M`), in this order. The header goes in the same row as the existing headers.
    - starter
