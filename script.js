@@ -1,5 +1,12 @@
 const auctionList = document.getElementById('auctionList');
 
+// Every tooltip on the page is a Bootstrap tooltip in the notes style (see
+// auction.js), delegated from the body so re-rendered markup works too.
+new bootstrap.Tooltip(document.body, {
+  selector: '[data-bs-toggle="tooltip"], [title], [data-bs-original-title]',
+  customClass: 'note-tooltip',
+});
+
 function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }

@@ -38,3 +38,10 @@ body {
   --bs-btn-disabled-bg: var(--fcm-orange);
   --bs-btn-disabled-border-color: var(--fcm-orange);
 }
+
+/* Every tooltip, on every page (Bootstrap tooltips with customClass
+   'note-tooltip'): keep line breaks, as in a spreadsheet note cell. */
+.note-tooltip .tooltip-inner {
+  white-space: pre-line;
+  text-align: left;
+}

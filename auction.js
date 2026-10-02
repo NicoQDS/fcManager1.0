@@ -92,8 +92,7 @@ function gkRankIcon(rank) {
   if (!rank || !Number.isInteger(n) || n < 0 || n > 9) {
     return rankBadge(rank);
   }
-  return `<svg class="gk-rank-icon gk-rank-${n}" viewBox="0 0 16 16" width="1em" height="1em" role="img">
-    <title>Gerarchia portiere ${n}</title>
+  return `<svg class="gk-rank-icon gk-rank-${n}" viewBox="0 0 16 16" width="1em" height="1em" role="img" aria-label="Gerarchia portiere ${n}" title="Gerarchia portiere ${n}">
     <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" />
     <text x="8" y="8" text-anchor="middle" dominant-baseline="central" fill="currentColor">${n}</text>
   </svg>`;
@@ -193,6 +192,28 @@ function ballotBadge(p) {
   }
   return `<span id="targetBallot-${esc(p.id)}" class="badge rounded-pill fw-normal badge-treq" data-bs-toggle="tooltip" data-bs-title="${esc(rival)}"><i class="bi bi-arrow-down-up"></i></span>`;
 }
+
+// Every tooltip on the page is a Bootstrap tooltip in the notes style, delegated
+// from the body so re-rendered markup works without re-init. Plain title
+// attributes count too: Bootstrap moves a title to data-bs-original-title on
+// first hover, so that attribute keeps the element matched afterwards.
+const TOOLTIP_SELECTOR = '[data-bs-toggle="tooltip"], [title], [data-bs-original-title]';
+new bootstrap.Tooltip(document.body, {
+  selector: TOOLTIP_SELECTOR,
+  customClass: 'note-tooltip',
+});
+
+// A click often re-renders the clicked element's container (remove, edit,
+// assign buttons); hide open tooltips first so none stay stuck on screen.
+document.addEventListener(
+  'pointerdown',
+  () => {
+    document.querySelectorAll('[aria-describedby^="tooltip"]').forEach((el) => {
+      bootstrap.Tooltip.getInstance(el)?.hide();
+    });
+  },
+  true
+);
 
 function emptyRow(message, colspan = 5) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
@@ -377,7 +398,7 @@ function render() {
 
 // Drop tooltips of rows about to be replaced, so none stay stuck on screen.
 function disposeTooltips(tbody) {
-  tbody.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
+  tbody.querySelectorAll(TOOLTIP_SELECTOR).forEach((el) => {
     bootstrap.Tooltip.getInstance(el)?.dispose();
   });
 }
@@ -419,11 +440,6 @@ document.getElementById('rolesNone').addEventListener('click', () => {
 // --- Players drawer: same filter/sort UX, own state, sold players never shown ---
 const targetRoleChecks = [...document.querySelectorAll('#targetRoleFilter .btn-check')];
 const targetPlayerListBody = document.getElementById('targetPlayerListBody');
-// Note tooltips (Bootstrap): delegated so re-rendered rows work without re-init.
-new bootstrap.Tooltip(targetPlayerListBody, {
-  selector: '[data-bs-toggle="tooltip"]',
-  customClass: 'note-tooltip',
-});
 
 let targetSortKey = null;
 let targetSortAsc = true;
