@@ -70,14 +70,14 @@ const RANK_COLORS = {
 };
 
 // label replaces the number in the badge text (e.g. "rig" for Rigorista); colour still follows the rank.
-// pill switches to a rounded pill badge.
-function rankBadge(rank, { label, pill = false } = {}) {
+// pill switches to a rounded pill badge. title replaces the ballottaggio badge's "Ballottaggio" tooltip.
+function rankBadge(rank, { label, pill = false, title = 'Ballottaggio' } = {}) {
   if (!rank) {
     return '';
   }
   const shape = pill ? 'badge rounded-pill fw-normal' : 'badge fw-normal';
   if (rank.toLowerCase() === 'ballottaggio') {
-    return ` <span class="${shape} badge-mid" title="Ballottaggio"><i class="bi bi-arrow-down-up"></i></span>`;
+    return ` <span class="${shape} badge-mid" title="${esc(title)}"><i class="bi bi-arrow-down-up"></i></span>`;
   }
   const color = RANK_COLORS[rank] || 'text-bg-light border';
   return ` <span class="${shape} ${color}">${esc(label ?? rank)}</span>`;
@@ -101,9 +101,33 @@ function gkRankIcon(rank) {
 
 // Penalty order as a filled rank pill reading "+2" (the bonus for a scored
 // penalty): 1 green, 2 yellow, 3 red, anything else light grey. A ballottaggio
-// keeps its arrow badge.
-function penaltyIcon(rank) {
-  return rankBadge(rank, { label: isBallottaggio(rank) ? undefined : '+2', pill: true });
+// keeps its arrow badge, its tooltip the other players of the ballot ("Ballottaggio" when unknown).
+function penaltyIcon(p) {
+  const rank = p.penaltyRank;
+  if (isBallottaggio(rank)) {
+    const others = penaltyBallotOthers(p);
+    return rankBadge(rank, { pill: true, title: others || undefined });
+  }
+  return rankBadge(rank, { label: '+2', pill: true });
+}
+
+// The other players in the note's "- penalty: Name1 60%, Name2 40%" line,
+// without their percentages: "" when the note has no such line.
+function penaltyBallotOthers(p) {
+  const line = String(p.note ?? '')
+    .split('\n')
+    .find((l) => l.trim().toLowerCase().startsWith('- penalty:'));
+  if (!line) {
+    return '';
+  }
+  return line
+    .trim()
+    .slice('- penalty:'.length)
+    .replace(/\(.*?\)/g, '') // "(1 source)" and similar remarks
+    .split(',')
+    .map((entry) => entry.replace(/\d+\s*%/g, '').trim())
+    .filter((name) => name && norm(name) !== norm(String(p.name ?? '').trim()))
+    .join(', ');
 }
 
 // Injury as a bare exclamation-circle-fill icon, sized like the goalkeeper circle and coloured by
@@ -137,7 +161,7 @@ function noteIcon(note) {
 function statusBadges(p) {
   return [
     gkRankIcon(p.gkRank),
-    penaltyIcon(p.penaltyRank),
+    penaltyIcon(p),
     injuryIcon(p.injury, p.note),
   ].join('');
 }
@@ -151,7 +175,7 @@ function gkBadge(p) {
 
 // Panel "Rig." column: the penalty-order "+2" pill, or the arrow pill for a ballottaggio.
 function penaltyBadge(p) {
-  return penaltyIcon(p.penaltyRank);
+  return penaltyIcon(p);
 }
 
 // Panel name cell: the ballottaggio arrow-down-up badge for the goalkeeper
