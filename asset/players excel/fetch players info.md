@@ -46,6 +46,7 @@ Read the single file in `raw data/` and never change it. Write the result as a n
    - tier
    - gk hierarchy
    - penalty
+   - ballot
    - max price
    - target
    - notes
@@ -64,9 +65,14 @@ Read the single file in `raw data/` and never change it. Write the result as a n
      - Goalkeepers ranked after 4 get an empty cell. Outfield players always get an empty cell.
      - When two or more goalkeepers of the same club are in a ballot for the starting spot, write `ballottaggio` for each of them instead of a number. Also add this line to the notes cell of each of them, listing every goalkeeper in the ballot with his starter percentage: `- gk: Name1 60%, Name2 40%`, followed by a line break (a new line inside the cell). Plain text only, no HTML tags.
    - penalty: the player's place in his club's penalty-taker order, from the online research. 1 = most likely penalty taker, 2 = the next one. When two or more players of the same club are in a ballot to take penalties, write `ballottaggio` for each of them instead of a number. Also add this line to the notes cell of each of them, listing every player in the ballot with his likelihood of taking the next penalty: `- penalty: Name1 60%, Name2 40%`, followed by a line break (a new line inside the cell). Plain text only, no HTML tags. Leave the cell empty for everyone else.
+   - ballot: outfield players only, from the online research. When the player is in a close ballot ("ballottaggio") with exactly one other player for a starting spot, write the other player's name, e.g. `Frattesi`. Fill both players' rows, each with the other's name. Only strong, near 50/50 ballots count. Leave the cell empty for everyone else, including goalkeepers (their ballots go in gk hierarchy).
    - max price: the suggested maximum price, in credits, to pay for the player at the auction. Base it on the online research (auction price guides) and, where possible, adjust it to the number of teams, the credits per team and the league style (Classic or Mantra). Every player must have a value: a whole number, at least 1.
    - target: leave empty for every player. The user fills it in after the task.
    - notes: plain text only, no HTML tags. Each note is its own line, in the form `- label: text`, followed by a line break (a new line inside the cell). Use only these lines, in this order, and leave the cell empty when none applies:
      - `- gk: ...`: goalkeeper ballot, see gk hierarchy.
      - `- penalty: ...`: penalty ballot, see penalty.
      - `- injury: ...`: for every player with a value in the injury column, the type of injury and the expected return, e.g. `- injury: knee, back mid-November`.
+     - `- free kicks: ...`: only for players who take direct free kicks for their club, e.g. `- free kicks: first choice` or `- free kicks: shares with Name`. Leave the line out for everyone else.
+     - `- planned absence: ...`: known absences during the season, e.g. `- planned absence: Africa Cup of Nations, Dec–Jan` or `- planned absence: suspended for the first 2 rounds`. Leave the line out when there are none.
+     - `- outlook: ...`: a short judgement from the online research that the other columns do not already cover, e.g. `- outlook: breakout season expected` or `- outlook: young prospect, low price`. Leave the line out when the research has nothing useful.
+     - Keep each line short (about 60 characters) and only add information found online that the other columns do not already contain.
