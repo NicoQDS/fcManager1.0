@@ -1,11 +1,11 @@
-# Fetch players info (light)
+# Info scraper
 
 ## Instructions for the user
 
 Before Claude starts:
 
 1. Download the players list Excel file from fantacalcio.it. Save it, unchanged, in `asset/players excel/raw data/`. That file must be the only one in the folder, so delete or move any older file first.
-2. Tell Claude "do asset/players excel/fetch players info light.md".
+2. Tell Claude "do asset/players excel/info scraper.md".
 
 After Claude finishes:
 
