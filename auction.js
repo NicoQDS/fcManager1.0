@@ -108,11 +108,21 @@ function penaltyIcon(rank) {
 
 // Injury as a bare exclamation-circle-fill icon, sized like the goalkeeper circle and coloured by
 // level (see .injury-icon-*): 1 light yellow, 2 medium orange, 3 severe red.
-function injuryIcon(level) {
+// The tooltip is the text after "- injury:" in the player's note, or
+// "Infortunio <level>" when the note has no such line.
+function injuryNote(note) {
+  const line = String(note ?? '')
+    .split('\n')
+    .find((l) => l.trim().toLowerCase().startsWith('- injury:'));
+  return line ? line.trim().slice('- injury:'.length).trim() : '';
+}
+
+function injuryIcon(level, note) {
   if (![1, 2, 3].includes(Number(level))) {
     return '';
   }
-  return `<i class="bi bi-exclamation-circle-fill injury-icon injury-icon-${Number(level)}" title="Infortunio ${Number(level)}"></i>`;
+  const title = injuryNote(note) || `Infortunio ${Number(level)}`;
+  return `<i class="bi bi-exclamation-circle-fill injury-icon injury-icon-${Number(level)}" title="${esc(title)}"></i>`;
 }
 
 // Info icon beside the name when the player has a note; hover shows the note in a Bootstrap tooltip.
@@ -128,7 +138,7 @@ function statusBadges(p) {
   return [
     gkRankIcon(p.gkRank),
     penaltyIcon(p.penaltyRank),
-    injuryIcon(p.injury),
+    injuryIcon(p.injury, p.note),
   ].join('');
 }
 
@@ -195,7 +205,7 @@ function targetPlayerRow(p) {
     ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
     <td><span id="targetName-${esc(p.id)}" class="target-name">
       <span id="targetNameText-${esc(p.id)}">${esc(p.name)}</span>
-      <span id="targetNameMarkers-${esc(p.id)}" class="target-name-markers">${gkBadge(p)}${ballottaggioBadges(p)}${ballotBadge(p)}${injuryIcon(p.injury)}</span>
+      <span id="targetNameMarkers-${esc(p.id)}" class="target-name-markers">${gkBadge(p)}${ballottaggioBadges(p)}${ballotBadge(p)}${injuryIcon(p.injury, p.note)}</span>
     </span></td>
     <td>${esc(p.team)}</td>
     <td class="text-center">${tierCircle(p)}</td>
