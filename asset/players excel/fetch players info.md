@@ -75,4 +75,12 @@ Read the single file in `raw data/` and never change it. Write the result as a n
      - `- free kicks: ...`: only for players who take direct free kicks for their club, e.g. `- free kicks: first choice` or `- free kicks: shares with Name`. Leave the line out for everyone else.
      - `- planned absence: ...`: known absences during the season, e.g. `- planned absence: Africa Cup of Nations, Dec–Jan` or `- planned absence: suspended for the first 2 rounds`. Leave the line out when there are none.
      - `- outlook: ...`: a short judgement from the online research that the other columns do not already cover, e.g. `- outlook: breakout season expected` or `- outlook: young prospect, low price`. Leave the line out when the research has nothing useful.
-     - Keep each line short (about 60 characters) and only add information found online that the other columns do not already contain.
+     - `- tips: ...`: practical auction advice from the online research. Add every tip that applies, separated by `; `, with no limit on the number of tips. Use only these kinds of tip, and only when relevant:
+       - low-cost bet: a cheap player who can pay off, e.g. `1-credit bet`.
+       - overpriced: a hyped player not to overpay, e.g. `hyped, don't overpay`.
+       - discipline: a player who collects many cards (malus), e.g. `card-prone`.
+       - assist: a player with assist potential, e.g. `assist man`.
+       - defence modifier: a defender or goalkeeper who helps the defence modifier, in Classic and Mantra, e.g. `good for defence modifier`.
+
+       Leave the line out when no tip applies.
+     - Keep each line short: about 60 characters, up to 140 for the tips line, and only add information found online that the other columns do not already contain.
