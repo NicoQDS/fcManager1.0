@@ -232,6 +232,13 @@ body {
   color: #fff;
 }
 
+/* Starting-ballot badge: same purple as the trequarti role badges (W, T). */
+.badge-treq {
+  background-color: var(--role-treq);
+  border: 1px solid var(--role-treq);
+  color: #fff;
+}
+
 /* Ballottaggio icon: the font glyph's thin strokes thickened with an outline. */
 .badge .bi-arrow-down-up {
   -webkit-text-stroke: 0.6px currentColor;
@@ -280,7 +287,7 @@ body {
 .injury-icon-2 { color: var(--fcm-orange); }
 .injury-icon-3 { color: var(--role-att); }
 
-/* Panel name cell: markers (goalkeeper, ballottaggio, injury) 5px after the
+/* Panel name cell: markers (goalkeeper, ballottaggio, ballot, injury) 5px after the
    name; the column's spare width stays empty after them. Flex rows keep the
    markers centred on the name's line box. */
 #targetPlayerListBody .target-name {

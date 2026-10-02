@@ -150,6 +150,16 @@ function ballottaggioBadges(p) {
   return isBallottaggio(p.gkRank) ? rankBadge(p.gkRank) : '';
 }
 
+// Panel name cell: a trequarti-purple arrow pill when the player is in a starting
+// ballot; hover shows the other player's name. Missing in older auctions.
+function ballotBadge(p) {
+  const rival = String(p.ballot ?? '').trim();
+  if (!rival) {
+    return '';
+  }
+  return `<span id="targetBallot-${esc(p.id)}" class="badge rounded-pill fw-normal badge-treq" data-bs-toggle="tooltip" data-bs-title="${esc(rival)}"><i class="bi bi-arrow-down-up"></i></span>`;
+}
+
 function emptyRow(message, colspan = 5) {
   return `<tr><td colspan="${colspan}" class="text-muted text-center py-4">${esc(message)}</td></tr>`;
 }
@@ -185,7 +195,7 @@ function targetPlayerRow(p) {
     ${showStarter ? `<td class="text-center">${starterBadge(p.starter)}</td>` : ''}
     <td><span id="targetName-${esc(p.id)}" class="target-name">
       <span id="targetNameText-${esc(p.id)}">${esc(p.name)}</span>
-      <span id="targetNameMarkers-${esc(p.id)}" class="target-name-markers">${gkBadge(p)}${ballottaggioBadges(p)}${injuryIcon(p.injury)}</span>
+      <span id="targetNameMarkers-${esc(p.id)}" class="target-name-markers">${gkBadge(p)}${ballottaggioBadges(p)}${ballotBadge(p)}${injuryIcon(p.injury)}</span>
     </span></td>
     <td>${esc(p.team)}</td>
     <td class="text-center">${tierCircle(p)}</td>

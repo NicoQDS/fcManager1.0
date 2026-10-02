@@ -42,7 +42,7 @@ Every `:id` route rejects ids containing `/`, `\` or `..` before they reach `pat
 `parsePlayers` in `script.js` reads the sheet named **`Tutti`**. It finds the header row as the first row that contains both `Id` and `Nome`, then matches columns by header name, ignoring case:
 
 - Required: `Id`, `RM` (roles, `;`-separated), `Nome`, `Squadra`, `Qt.A M`, `Qt.I M`, `Diff.M`, `FVM M`.
-- Optional scouting columns, English or Italian header: `Starter`/`Titolarità`, `Injury`/`Infortunio` (1–3), `Tier`, `GK hierarchy`/`Gerarchia portiere`, `Penalty`/`Rigorista`, `Max price`/`Prezzo massimo`, `Target`, `Notes`/`Note`.
+- Optional scouting columns, English or Italian header: `Starter`/`Titolarità`, `Injury`/`Infortunio` (1–3), `Tier`, `GK hierarchy`/`Gerarchia portiere`, `Penalty`/`Rigorista`, `Max price`/`Prezzo massimo`, `Ballot`/`Ballottaggio`, `Target`, `Notes`/`Note`.
 
 A missing optional column becomes `''`. `auction.js` shows or hides the related table columns depending on whether any player has data for them. The source file is built by following `asset/players excel/info scraper.md`: the fantacalcio.it download goes in `asset/players excel/raw data/` (gitignored), and the filled file is written to `asset/players excel/`. Old versions are in `asset/players excel/_old/`. The app never reads this folder: the file is uploaded through the browser form.
 

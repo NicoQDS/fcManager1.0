@@ -237,6 +237,7 @@ function parsePlayers(sheet) {
   const cGkRank = col('GK hierarchy', 'Gerarchia portiere');
   const cPenaltyRank = col('Penalty', 'Rigorista');
   const cMaxPrice = col('Max price', 'Prezzo massimo');
+  const cBallot = col('Ballot', 'Ballottaggio');
 
   const players = [];
   for (let i = headerIdx + 1; i < rows.length; i++) {
@@ -264,6 +265,7 @@ function parsePlayers(sheet) {
       gkRank: cGkRank === -1 ? '' : String(r[cGkRank]).trim(),
       penaltyRank: cPenaltyRank === -1 ? '' : String(r[cPenaltyRank]).trim(),
       maxPrice: cMaxPrice === -1 ? '' : parseNumber(r[cMaxPrice]),
+      ballot: cBallot === -1 ? '' : String(r[cBallot]).trim(),
     });
   }
   return players;
