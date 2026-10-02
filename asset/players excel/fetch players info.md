@@ -32,8 +32,15 @@ When searching online for the data in the new columns, prefer these websites:
 - https://www.fantacalciopedia.com/
 - https://www.tuttofantacalcio.it/
 
+Freshness, for every column:
+
+- Prefer the most recent information. Check the publication date of every article or page, and favour those from the last week.
+- When sources disagree, the most recent one wins.
+- Use older information only when nothing recent covers the player, and give it less weight.
+
 Column-specific preferences:
 
+- injury (and the `- injury:` note line): use only news from the last week. Injuries change fast, so drop older reports unless a recent source confirms them.
 - starter: slightly prefer the "formazione tipo" page on fantacalcio-online.com. Use the other sources to confirm it or fill gaps.
 
 ## Tasks for Claude
