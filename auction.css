@@ -72,7 +72,7 @@ body {
 #playerListZone {
   flex: 0 1 auto;
   display: flex;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
 }
 
 /* Bound card: controls + table are one unit, never visually unlink. */
@@ -92,7 +92,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
   border-bottom: 1px solid #dee2e6;
 }
 
@@ -394,9 +394,9 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 #rosterZone {
   flex: 1 1 auto;
   display: flex;
-  gap: 0.4rem;
+  gap: 0.75rem;
   min-width: 0;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
   padding-left: 0rem; /* no gutter between the two columns */
 }
 
@@ -417,9 +417,9 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   flex: 1 1 auto;
   display: flex;
   align-items: stretch;
-  gap: 0.4rem;
+  gap: 0.75rem;
   min-width: 0;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
   background: #fff;
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
@@ -650,7 +650,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   flex-direction: column;
   gap: 0.75rem;
   min-width: 0;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
   padding-left: 0rem;
   overflow-y: auto; /* last resort: more team cards than the column is tall */
 }
@@ -669,7 +669,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 /* Teams sidebar */
 #teamsZone {
   flex: 0 0 auto;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
 }
 
 /* SALES LOG — own card under the teams, newest entry on top. */
@@ -686,7 +686,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
 
 #auctionLogHead {
   flex: 0 0 auto;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   font-size: 0.75rem;
   font-weight: 600;
@@ -701,7 +701,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   flex: 1 1 auto;
   overflow-y: auto;
   margin: 0;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
   list-style: none;
   font-size: 0.8rem;
 }
@@ -760,7 +760,7 @@ th.sortable[data-dir='desc'] .sort-caret::after {
   gap: 0.5rem;
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
-  padding: 0.4rem;
+  padding: 0.4rem 0.75rem;
   margin-bottom: 0.4rem;
   cursor: pointer;
 }
