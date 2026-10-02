@@ -509,12 +509,47 @@
           </div>
         </div>
         <div id="gkPlanNotes" class="flex-shrink-0 border-top p-3 small">
-          <div class="fw-bold mb-2">Per la porta</div>
-          <ul class="list-unstyled mb-0">
-            <li><span class="badge text-bg-secondary me-1">A</span>Juve 47, 1 + Toro 1 / Como 43, 1 + Udinese 15</li>
-            <li><span class="badge text-bg-secondary me-1">B</span>Lazio + Lecce (meglio) oppure Frosinone</li>
-            <li><span class="badge text-bg-secondary me-1">C</span>Udinese 16 + Genoa 7 + Parma 3</li>
+          <ul id="planNotesTabs" class="nav nav-tabs mb-2" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button
+                type="button"
+                id="planNotesGkTab"
+                class="nav-link active"
+                data-bs-toggle="tab"
+                data-bs-target="#planNotesGkPane"
+                role="tab"
+                aria-controls="planNotesGkPane"
+                aria-selected="true"
+              >
+                gk
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                type="button"
+                id="planNotesGeneralTab"
+                class="nav-link"
+                data-bs-toggle="tab"
+                data-bs-target="#planNotesGeneralPane"
+                role="tab"
+                aria-controls="planNotesGeneralPane"
+                aria-selected="false"
+              >
+                ballot
+              </button>
+            </li>
           </ul>
+          <div id="planNotesTabContent" class="tab-content">
+            <div id="planNotesGkPane" class="tab-pane fade show active" role="tabpanel" aria-labelledby="planNotesGkTab" tabindex="0">
+              <div class="fw-bold mb-2">Per la porta</div>
+              <ul class="list-unstyled mb-0">
+                <li><span class="badge text-bg-secondary me-1">A</span>Juve 47, 1 + Toro 1 / Como 43, 1 + Udinese 15</li>
+                <li><span class="badge text-bg-secondary me-1">B</span>Lazio + Lecce (meglio) oppure Frosinone</li>
+                <li><span class="badge text-bg-secondary me-1">C</span>Udinese 16 + Genoa 7 + Parma 3</li>
+              </ul>
+            </div>
+            <div id="planNotesGeneralPane" class="tab-pane fade" role="tabpanel" aria-labelledby="planNotesGeneralTab" tabindex="0"></div>
+          </div>
         </div>
       </div>
     </aside>

@@ -642,6 +642,32 @@ function renderMineRoster(mine) {
     ? [...mine.roster].sort((a, b) => roleRank(a) - roleRank(b) || byName(a, b))
     : [];
   document.getElementById('mineRosterBody').innerHTML = players.map(mineRosterRow).join('');
+  renderMineBallots(players);
+}
+
+// Plan notes "ballot" tab: every player in the user's team who is in a
+// starting ballot, with the other player of the ballot. Once the user also owns
+// that other player (same name and club), the ballot is covered and drops out.
+// Each line reads "Rival (owned player) <rival roles>"; the roles come from the
+// rival's row in the player list, none when it is not found.
+function ballotRival(p) {
+  return allPlayers.find((q) => q.team === p.team && norm(q.name).trim() === norm(p.ballot).trim());
+}
+
+function mineBallotRow(p) {
+  const rival = ballotRival(p);
+  return `<li id="planNotesBallot-${esc(p.id)}">
+    <span class="badge rounded-pill fw-normal badge-treq me-1"><i class="bi bi-arrow-down-up"></i></span>${esc(p.ballot)} (${esc(p.name)}) ${rival ? roleBadges(rival) : ''}
+  </li>`;
+}
+
+function renderMineBallots(players) {
+  const ownsRival = (p) =>
+    players.some((q) => q !== p && q.team === p.team && norm(q.name).trim() === norm(p.ballot).trim());
+  const inBallot = players.filter((p) => String(p.ballot ?? '').trim() && !ownsRival(p));
+  document.getElementById('planNotesGeneralPane').innerHTML = inBallot.length
+    ? `<ul id="planNotesBallotsList" class="list-unstyled mb-0">${inBallot.map(mineBallotRow).join('')}</ul>`
+    : '';
 }
 
 // Bootstrap Icons pencil, inlined: same icon as #mineRosterEditBtn, one per
