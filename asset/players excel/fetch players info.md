@@ -2,9 +2,14 @@
 
 ## Instructions for the user
 
-Do these steps, then tell Claude "do asset/players excel/fetch players info.md".
+Before Claude starts:
 
 1. Download the players list Excel file from fantacalcio.it. Save it, unchanged, in `asset/players excel/raw data/`. That file must be the only one in the folder, so delete or move any older file first.
+2. Tell Claude "do asset/players excel/fetch players info.md".
+
+After Claude finishes:
+
+3. Open the new Excel file in `asset/players excel/` and flag your preferred players in the `target` column. Any value (e.g. `x`) marks a player as a target, and the app highlights the row. Leave the cell empty for the others.
 
 ## Questions for the user
 
@@ -46,6 +51,8 @@ Read the single file in `raw data/` and never change it. Write the result as a n
    - notes
 
 2. Fill the columns as described below.
+
+   - target: leave empty for every player. The user fills it in after the task.
 
    - starter: the likelihood, as a percentage from 0% to 100%, that the player will be a starter ("titolare"). Write it as an Excel percentage cell (e.g. 0.75 shown as 75%).
    - injury: a whole number from 1 to 3 for a currently injured player: based on the expected time out. 1 = light, up to 3 weeks. 2 = medium, more than 3 and up to 6 weeks. 3 = hard, more than 6 weeks. Leave the cell empty when the player is not injured.
