@@ -139,18 +139,15 @@ function gkBadge(p) {
   return isBallottaggio(p.gkRank) ? '' : gkRankIcon(p.gkRank);
 }
 
-// Panel "Rig." column: the penalty-order "+2" pill (a ballottaggio shows its arrow badge by the name).
+// Panel "Rig." column: the penalty-order "+2" pill, or the arrow pill for a ballottaggio.
 function penaltyBadge(p) {
-  return isBallottaggio(p.penaltyRank) ? '' : penaltyIcon(p.penaltyRank);
+  return penaltyIcon(p.penaltyRank);
 }
 
 // Panel name cell: the ballottaggio arrow-down-up badge for the goalkeeper
-// hierarchy (square) and/or the penalty order (pill), right after the name.
+// hierarchy (square), right after the name.
 function ballottaggioBadges(p) {
-  return [
-    isBallottaggio(p.gkRank) ? rankBadge(p.gkRank) : '',
-    isBallottaggio(p.penaltyRank) ? rankBadge(p.penaltyRank, { pill: true }) : '',
-  ].join('');
+  return isBallottaggio(p.gkRank) ? rankBadge(p.gkRank) : '';
 }
 
 function emptyRow(message, colspan = 5) {
@@ -297,7 +294,7 @@ const roleChecks = [...document.querySelectorAll('#roleFilter .btn-check')];
 
 let allPlayers = [];
 let showStarter = false; // true when the file carries any "Titolarità" value
-let showPenalty = false; // true when any player has a penalty order (not ballottaggio)
+let showPenalty = false; // true when any player has a penalty order or ballottaggio
 let showNotes = false; // true when any player has a note (panel notes column)
 let showMaxPrice = false; // true when the file carries any "Prezzo massimo" value
 let sortKey = null;
